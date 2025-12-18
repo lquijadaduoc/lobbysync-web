@@ -1,0 +1,38 @@
+.dashboard-shell {
+  min-height: 100vh;
+  background: var(--color-bg);
+}
+
+.content-area {
+  background: var(--color-bg);
+}
+
+.sidebar {
+  width: 240px;
+  min-height: 100vh;
+  background: linear-gradient(180deg, var(--color-navy) 0%, var(--color-slate) 100%);
+}
+
+.sidebar-link {
+  color: #e6ecf5;
+  border-radius: 8px;
+  padding: 0.65rem 0.75rem;
+}
+
+.sidebar-link:hover,
+.sidebar-link.active {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+.auth-background {
+  background: linear-gradient(120deg, rgba(11, 31, 51, 0.9), rgba(36, 52, 70, 0.85)),
+    url('https://images.unsplash.com/photo-1465808883060-1a1514640a81?auto=format&fit=crop&w=1350&q=80')
+      center/cover no-repeat fixed;
+}
+
+.login-card {
+  border: none;
+  border-radius: 16px;
+  backdrop-filter: blur(4px);
+}
