@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catálogo de Funcionalidades - LobbySync</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        h1 {
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+        .search-bar {
+            padding: 30px;
+            background: #f5f5f5;
+            border-bottom: 2px solid #eee;
+        }
+        .search-bar input {
+            width: 100%;
+            padding: 12px 20px;
+            font-size: 1em;
+            border: 2px solid #667eea;
+            border-radius: 5px;
+            outline: none;
+        }
+        .search-bar input:focus {
+            border-color: #764ba2;
+            box-shadow: 0 0 10px rgba(118, 75, 162, 0.3);
+        }
+        .content {
+            padding: 30px;
+        }
+        .filters {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        .filter-btn {
+            padding: 10px 20px;
+            border: 2px solid #ddd;
+            background: white;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+        .filter-btn:hover, .filter-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+        .card {
+            background: white;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .card:hover {
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            transform: translateY(-5px);
+        }
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+        .emoji {
+            font-size: 2em;
+        }
+        .card h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+            flex: 1;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+        .status-working {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status-mock {
+            background: #fff3cd;
+            color: #856404;
+        }
+        .status-pending {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .card p {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 15px;
+            font-size: 0.95em;
+        }
+        .roles {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+        .role-tag {
+            font-size: 0.8em;
+            padding: 4px 10px;
+            border-radius: 15px;
+            background: #f0f0f0;
+            color: #333;
+        }
+        .role-tag.admin {
+            background: #fff3cd;
+            color: #856404;
+        }
+        .role-tag.concierge {
+            background: #cfe2ff;
+            color: #084298;
+        }
+        .role-tag.resident {
+            background: #e2e3e5;
+            color: #383d41;
+        }
+        .role-tag.super {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .features-list {
+            font-size: 0.9em;
+            color: #666;
+        }
+        .features-list li {
+            margin: 5px 0;
+            margin-left: 20px;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal.show {
+            display: flex;
+        }
+        .modal-content {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+        }
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: #f0f0f0;
+            border: none;
+            font-size: 1.5em;
+            cursor: pointer;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .close-btn:hover {
+            background: #e0e0e0;
+        }
+        .modal-title {
+            color: #667eea;
+            font-size: 1.8em;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .section-title {
+            color: #764ba2;
+            font-size: 1.2em;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        .modal-roles {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .modal-roles .role-tag {
+            padding: 8px 14px;
+            font-size: 0.9em;
+        }
+        .feature-item {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            border-left: 3px solid #667eea;
+        }
+        .test-steps {
+            background: #f0f4ff;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 15px;
+        }
+        .test-steps ol {
+            margin-left: 20px;
+            color: #666;
+        }
+        .test-steps li {
+            margin-bottom: 8px;
+        }
+        code {
+            background: #f0f0f0;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            color: #d63384;
+        }
+        .no-results {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+        }
+        .no-results p {
+            font-size: 1.2em;
+            margin-bottom: 10px;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🏢 Catálogo Completo de Funcionalidades</h1>
+            <p>Haz click en cada funcionalidad para ver detalles, qué hace y cómo probarla</p>
+        </header>
+
+        <div class="search-bar">
+            <input type="text" id="searchInput" placeholder="🔍 Busca funcionalidad por nombre (ej: 'Paquetes', 'Facturas')...">
+        </div>
+
+        <div class="content">
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalCount">0</div>
+                    <div class="stat-label">Total de Funcionalidades</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="workingCount">0</div>
+                    <div class="stat-label">Completamente Funcionales</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="mockCount">0</div>
+                    <div class="stat-label">Con Mock Data</div>
+                </div>
+            </div>
+
+            <div class="filters">
+                <button class="filter-btn active" data-filter="all">Todas</button>
+                <button class="filter-btn" data-filter="working">✓ Funcionales</button>
+                <button class="filter-btn" data-filter="mock">📋 Con Mock</button>
+                <button class="filter-btn" data-filter="admin">🔑 Admin</button>
+                <button class="filter-btn" data-filter="concierge">📋 Concierge</button>
+                <button class="filter-btn" data-filter="resident">👤 Resident</button>
+            </div>
+
+            <div class="grid" id="functionalityGrid">
+                <!-- Se llena con JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para detalles -->
+    <div class="modal" id="modal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeModal()">&times;</button>
+            <div id="modalBody">
+                <!-- Se llena dinámicamente -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Base de datos de funcionalidades
+        const functionalities = [
+            {
+                id: 'login',
+                name: 'Autenticación',
+                emoji: '🔐',
+                status: 'working',
+                description: 'Sistema de login con 4 usuarios quick-access',
+                roles: ['admin', 'concierge', 'resident'],
+                features: ['Login rápido sin contraseña', 'Manual login', 'JWT tokens', 'Sesión persistente'],
+                path: '/login',
+                testSteps: [
+                    'Haz click en uno de los 4 botones',
+                    'Verifica que el login sea instantáneo',
+                    'Verifica que el token se guarde',
+                    'Recarga la página y verifica que siga logueado'
+                ]
+            },
+            {
+                id: 'panel-admin',
+                name: 'Panel Admin',
+                emoji: '📊',
+                status: 'working',
+                description: 'Dashboard principal con estadísticas',
+                roles: ['admin'],
+                features: ['Resumen de usuarios', 'Gráficos de actividad', 'Estado del sistema', 'Métricas'],
+                path: '/admin',
+                testSteps: [
+                    'Login como ADMIN',
+                    'Haz click en "Panel"',
+                    'Verifica que se carguen las estadísticas',
+                    'Observa los números: usuarios activos, edificios, etc.'
+                ]
+            },
+            {
+                id: 'usuarios',
+                name: 'Gestión de Usuarios',
+                emoji: '👥',
+                status: 'mock',
+                description: 'CRUD de usuarios del sistema',
+                roles: ['admin'],
+                features: ['Ver usuarios', 'Crear usuario', 'Editar usuario', 'Eliminar usuario', 'Filtrar por rol'],
+                path: '/admin/users',
+                testSteps: [
+                    'Login como ADMIN',
+                    'Click en "Usuarios"',
+                    'Verifica que se carguen los 6 usuarios de prueba',
+                    'Click en "Crear Usuario" y completa el formulario',
+                    'Verifica que aparezca en la lista'
+                ]
+            },
+            {
+                id: 'edificios',
+                name: 'Gestión de Edificios',
+                emoji: '🏢',
+                status: 'mock',
+                description: 'CRUD de edificios de la cadena',
+                roles: ['admin'],
+                features: ['Ver edificios', 'Crear edificio', 'Editar datos', 'Ver estadísticas por edificio'],
+                path: '/admin/buildings',
+                testSteps: [
+                    'Login como ADMIN',
+                    'Click en "Edificios"',
+                    'Verifica lista con 3 edificios simulados',
+                    'Intenta crear uno nuevo'
+                ]
+            },
+            {
+                id: 'departamentos',
+                name: 'Gestión de Departamentos',
+                emoji: '🚪',
+                status: 'mock',
+                description: 'CRUD de unidades/departamentos',
+                roles: ['admin'],
+                features: ['Ver departamentos', 'Crear departamento', 'Asignar propietario', 'Ver ocupación'],
+                path: '/admin/units',
+                testSteps: [
+                    'Login como ADMIN',
+                    'Click en "Departamentos"',
+                    'Verifica que se muestren por edificio',
+                    'Intenta cambiar la información'
+                ]
+            },
+            {
+                id: 'metricas',
+                name: 'Métricas y Reportes',
+                emoji: '📈',
+                status: 'mock',
+                description: 'Estadísticas y análisis del sistema',
+                roles: ['admin'],
+                features: ['Gráficos de ocupación', 'Reportes de actividad', 'Análisis de uso', 'Exportar datos'],
+                path: '/admin/metrics',
+                testSteps: [
+                    'Login como ADMIN',
+                    'Click en "Métricas"',
+                    'Verifica los diferentes gráficos',
+                    'Observa tendencias de uso'
+                ]
+            },
+            {
+                id: 'bitacora',
+                name: 'Bitácora (Logbook)',
+                emoji: '📝',
+                status: 'working',
+                description: 'Registro diario de eventos del edificio',
+                roles: ['concierge'],
+                features: ['Crear evento', 'Ver historial', 'Filtrar por tipo', 'Buscar por fecha', 'Asignar prioridad'],
+                path: '/concierge/logbook',
+                testSteps: [
+                    'Login como CONCIERGE',
+                    'Click en "Bitácora"',
+                    'Verifica lista de eventos existentes',
+                    'Click en "Nuevo Evento"',
+                    'Completa: tipo, descripción, edificio, prioridad',
+                    'Verifica que aparezca en la lista'
+                ]
+            },
+            {
+                id: 'paquetes',
+                name: 'Paquetería',
+                emoji: '📦',
+                status: 'working',
+                description: 'Recepción y entrega de paquetes',
+                roles: ['concierge'],
+                features: ['Registrar paquete', 'Cambiar estado', 'Ver seguimiento', 'Notificar residentes', 'Filtrar por estado'],
+                path: '/concierge/packages',
+                testSteps: [
+                    'Login como CONCIERGE',
+                    'Click en "Paquetería"',
+                    'Verifica la tabla de paquetes',
+                    'Intenta cambiar estado de uno a "Entregado"',
+                    'Verifica que se actualice'
+                ]
+            },
+            {
+                id: 'visitas',
+                name: 'Control de Visitantes',
+                emoji: '🚪',
+                status: 'mock',
+                description: 'Autorización y registro de visitantes',
+                roles: ['concierge'],
+                features: ['Ver visitantes', 'Aprobar invitación', 'Rechazar visita', 'Ver historial', 'Generar reportes'],
+                path: '/concierge/visitors',
+                testSteps: [
+                    'Login como CONCIERGE',
+                    'Click en "Visitas"',
+                    'Verifica lista de invitaciones pendientes',
+                    'Intenta aprobar/rechazar una'
+                ]
+            },
+            {
+                id: 'acceso',
+                name: 'Control de Acceso',
+                emoji: '🔐',
+                status: 'mock',
+                description: 'Registro de entradas/salidas del edificio',
+                roles: ['concierge'],
+                features: ['Ver log de accesos', 'Filtrar por residente', 'Filtrar por tipo', 'Ver alertas', 'Acceso denegado'],
+                path: '/concierge/access',
+                testSteps: [
+                    'Login como CONCIERGE',
+                    'Click en "Acceso"',
+                    'Verifica registros de entrada/salida',
+                    'Usa los filtros'
+                ]
+            },
+            {
+                id: 'mis-paquetes',
+                name: 'Mis Paquetes (Resident)',
+                emoji: '📦',
+                status: 'working',
+                description: 'Ver paquetes personales del residente',
+                roles: ['resident'],
+                features: ['Ver paquetes pendientes', 'Ver historial', 'Seguimiento en tiempo real', 'Notificaciones'],
+                path: '/resident/packages',
+                testSteps: [
+                    'Login como RESIDENT',
+                    'Click en "Paquetes"',
+                    'Verifica lista de paquetes personales',
+                    'Verifica que solo vea los suyos'
+                ]
+            },
+            {
+                id: 'facturas',
+                name: 'Mis Facturas',
+                emoji: '💳',
+                status: 'working',
+                description: 'Ver y pagar facturas del departamento',
+                roles: ['resident'],
+                features: ['Ver facturas', 'Filtrar por estado', 'Hacer pagos', 'Historial de pagos', 'Descargar factura'],
+                path: '/resident/bills',
+                testSteps: [
+                    'Login como RESIDENT',
+                    'Click en "Facturas"',
+                    'Verifica lista con diferentes estados',
+                    'Click en "Pagar" en una factura pendiente',
+                    'Selecciona método de pago',
+                    'Completa la transacción',
+                    'Verifica que cambio a "Pagada"'
+                ]
+            },
+            {
+                id: 'mi-acceso',
+                name: 'Mi Acceso (Historial)',
+                emoji: '🔑',
+                status: 'working',
+                description: 'Historial personal de entradas/salidas',
+                roles: ['resident'],
+                features: ['Ver entradas/salidas', 'Filtrar por fecha', 'Filtrar por tipo', 'Exportar historial', 'Ver detalles'],
+                path: '/resident/access',
+                testSteps: [
+                    'Login como RESIDENT',
+                    'Click en "Acceso"',
+                    'Verifica historial personal',
+                    'Usa filtros de fecha y tipo',
+                    'Verifica que solo vea sus propios registros'
+                ]
+            },
+            {
+                id: 'invitaciones',
+                name: 'Mis Invitaciones',
+                emoji: '🎫',
+                status: 'mock',
+                description: 'Crear y gestionar invitaciones para visitantes',
+                roles: ['resident'],
+                features: ['Crear invitación', 'Ver invitaciones', 'Anular invitación', 'Ver visitantes autorizados'],
+                path: '/resident/invitations',
+                testSteps: [
+                    'Login como RESIDENT',
+                    'Click en "Invitaciones"',
+                    'Intenta crear una nueva invitación',
+                    'Ingresa datos del visitante'
+                ]
+            },
+            {
+                id: 'amenidades',
+                name: 'Reserva de Amenidades',
+                emoji: '🏋️',
+                status: 'mock',
+                description: 'Reservar espacios comunes (gym, piscina, etc.)',
+                roles: ['resident'],
+                features: ['Ver amenidades disponibles', 'Reservar espacio', 'Ver mis reservas', 'Cancelar reserva', 'Ver disponibilidad'],
+                path: '/resident/amenities',
+                testSteps: [
+                    'Login como RESIDENT',
+                    'Click en "Amenidades"',
+                    'Verifica lista de espacios disponibles',
+                    'Intenta reservar uno'
+                ]
+            },
+            {
+                id: 'activos',
+                name: 'Gestión de Activos',
+                emoji: '🔧',
+                status: 'mock',
+                description: 'Inventario y mantenimiento de activos del edificio',
+                roles: ['admin'],
+                features: ['Ver activos', 'Mantenimiento', 'Seguimiento técnico', 'Historial de mantenimiento'],
+                path: '/admin/assets',
+                testSteps: [
+                    'Login como ADMIN',
+                    'Intenta acceder a Assets',
+                    'Verifica lista de equipos',
+                    'Ver datos técnicos y mantenimiento'
+                ]
+            },
+            {
+                id: 'finanzas',
+                name: 'Finanzas y Presupuestos',
+                emoji: '💰',
+                status: 'mock',
+                description: 'Gestión financiera y presupuestos del edificio',
+                roles: ['admin'],
+                features: ['Ingresos y gastos', 'Presupuestos', 'Reportes financieros', 'Proyecciones'],
+                path: '/admin/finance',
+                testSteps: [
+                    'Login como ADMIN',
+                    'Intenta acceder a Finanzas',
+                    'Verifica estado financiero',
+                    'Analiza tendencias'
+                ]
+            },
+        ];
+
+        // Actualizar contadores
+        function updateStats() {
+            document.getElementById('totalCount').textContent = functionalities.length;
+            document.getElementById('workingCount').textContent = functionalities.filter(f => f.status === 'working').length;
+            document.getElementById('mockCount').textContent = functionalities.filter(f => f.status !== 'pending').length;
+        }
+
+        // Renderizar grid
+        function renderGrid(items = functionalities) {
+            const grid = document.getElementById('functionalityGrid');
+            if (items.length === 0) {
+                grid.innerHTML = '<div class="no-results"><p>No se encontraron resultados</p></div>';
+                return;
+            }
+            grid.innerHTML = items.map(f => `
+                <div class="card" onclick="openModal('${f.id}')">
+                    <div class="card-header">
+                        <div>
+                            <div class="emoji" style="margin-bottom: 8px;">${f.emoji}</div>
+                            <h3>${f.name}</h3>
+                        </div>
+                        <span class="status-badge status-${f.status}">
+                            ${f.status === 'working' ? '✓ OK' : f.status === 'mock' ? '📋 Mock' : '⏳ Soon'}
+                        </span>
+                    </div>
+                    <p>${f.description}</p>
+                    <div class="roles">
+                        ${f.roles.map(r => `<span class="role-tag ${r}">${
+                            r === 'admin' ? '🔑 Admin' : r === 'concierge' ? '📋 Concierge' : '👤 Resident'
+                        }</span>`).join('')}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Abrir modal con detalles
+        function openModal(id) {
+            const func = functionalities.find(f => f.id === id);
+            if (!func) return;
+
+            const testStepsHtml = func.testSteps.map((step, i) => `
+                <li><strong>Paso ${i + 1}:</strong> ${step}</li>
+            `).join('');
+
+            const modalBody = document.getElementById('modalBody');
+            modalBody.innerHTML = `
+                <div class="modal-title">
+                    <span style="font-size: 1.8em;">${func.emoji}</span>
+                    <div>
+                        <div>${func.name}</div>
+                        <div style="font-size: 0.6em; color: #999; margin-top: 5px;">
+                            ${func.status === 'working' ? '✓ Completamente Funcional' : 
+                              func.status === 'mock' ? '📋 Con datos simulados' : '⏳ Próximamente'}
+                        </div>
+                    </div>
+                </div>
+
+                <p style="color: #666; line-height: 1.8; margin-bottom: 20px;">${func.description}</p>
+
+                <div class="modal-roles">
+                    ${func.roles.map(r => `<span class="role-tag ${r}">${
+                        r === 'admin' ? '🔑 Admin' : r === 'concierge' ? '📋 Concierge' : '👤 Resident'
+                    }</span>`).join('')}
+                </div>
+
+                <div class="section-title">¿Qué puedes hacer?</div>
+                <ul class="features-list">
+                    ${func.features.map(f => `<li>✓ ${f}</li>`).join('')}
+                </ul>
+
+                <div class="section-title">Cómo probarlo</div>
+                <div class="test-steps">
+                    <ol>
+                        ${testStepsHtml}
+                    </ol>
+                </div>
+
+                <div class="feature-item" style="margin-top: 20px;">
+                    <strong>Ruta:</strong> <code>${func.path}</code>
+                </div>
+            `;
+            document.getElementById('modal').classList.add('show');
+        }
+
+        function closeModal() {
+            document.getElementById('modal').classList.remove('show');
+        }
+
+        // Filtrado
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+
+                const filter = this.dataset.filter;
+                const filtered = filter === 'all' ? functionalities :
+                    filter === 'working' ? functionalities.filter(f => f.status === 'working') :
+                    filter === 'mock' ? functionalities.filter(f => f.status === 'mock') :
+                    functionalities.filter(f => f.roles.includes(filter));
+                
+                renderGrid(filtered);
+            });
+        });
+
+        // Búsqueda
+        document.getElementById('searchInput').addEventListener('input', function(e) {
+            const query = e.target.value.toLowerCase();
+            const filtered = functionalities.filter(f => 
+                f.name.toLowerCase().includes(query) ||
+                f.description.toLowerCase().includes(query) ||
+                f.features.some(feature => feature.toLowerCase().includes(query))
+            );
+            renderGrid(filtered);
+        });
+
+        // Cerrar modal al hacer click fuera
+        document.getElementById('modal').addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+
+        // Inicializar
+        updateStats();
+        renderGrid();
+    </script>
+</body>
+</html>

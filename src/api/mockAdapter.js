@@ -10,6 +10,10 @@ import {
   MOCK_PACKAGES,
   MOCK_AMENITIES,
   MOCK_VISITORS,
+  MOCK_ASSETS,
+  MOCK_ACCESS_LOGS,
+  MOCK_FINANCE,
+  MOCK_MAINTENANCE_TICKETS,
 } from './mockData';
 
 export function getMockAdapter() {
@@ -105,7 +109,65 @@ export function getMockAdapter() {
         };
       }
 
-      // Ruta no encontrada
+      // Rutas de activos
+      if (url.includes('/assets') && method === 'GET') {
+        return {
+          data: MOCK_ASSETS,
+          status: 200,
+          statusText: 'OK',
+          headers: {},
+          config,
+        };
+      }
+
+      // Rutas de acceso/logs
+      if (url.includes('/access') && url.includes('/logs') && method === 'GET') {
+        return {
+          data: MOCK_ACCESS_LOGS,
+          status: 200,
+          statusText: 'OK',
+          headers: {},
+          config,
+        };
+      }
+
+      // Rutas de finanzas
+      if (url.includes('/finance') && method === 'GET') {
+        return {
+          data: MOCK_FINANCE,
+          status: 200,
+          statusText: 'OK',
+          headers: {},
+          config,
+        };
+      }
+
+      // Rutas de mantenimiento
+      if (url.includes('/maintenance') && method === 'GET') {
+        return {
+          data: MOCK_MAINTENANCE_TICKETS,
+          status: 200,
+          statusText: 'OK',
+          headers: {},
+          config,
+        };
+      }
+
+      if (url.includes('/maintenance') && method === 'POST') {
+        const newTicket = {
+          id: MOCK_MAINTENANCE_TICKETS.length + 1,
+          ...config.data,
+          createdAt: config.data.createdAt || new Date().toISOString(),
+        };
+        MOCK_MAINTENANCE_TICKETS.push(newTicket);
+        return {
+          data: newTicket,
+          status: 201,
+          statusText: 'Created',
+          headers: {},
+          config,
+        };
+      }
       const error = new Error(`No hay mock para: ${method} ${url}`);
       error.response = {
         status: 404,
