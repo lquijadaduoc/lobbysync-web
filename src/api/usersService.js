@@ -5,34 +5,34 @@ import apiClient from './axiosConfig';
  * @param {object} params - Parámetros: page, size, role, status
  */
 export const fetchUsers = (params = {}) =>
-  apiClient.get('/users', { params });
+  apiClient.get('/api/v1/users', { params });
 
 /**
  * Obtiene un usuario por ID
  */
 export const fetchUserById = (userId) =>
-  apiClient.get(`/users/${userId}`);
+  apiClient.get(`/api/v1/users/${userId}`);
 
 /**
  * Crea un nuevo usuario
  */
 export const createUser = (userData) =>
-  apiClient.post('/users', userData);
+  apiClient.post('/api/v1/users', userData);
 
 /**
  * Actualiza un usuario
  */
 export const updateUser = (userId, userData) =>
-  apiClient.put(`/users/${userId}`, userData);
+  apiClient.put(`/api/v1/users/${userId}`, userData);
 
 /**
  * Elimina un usuario
  */
 export const deleteUser = (userId) =>
-  apiClient.delete(`/users/${userId}`);
+  apiClient.delete(`/api/v1/users/${userId}`);
 
 /**
  * Cambia el estado de un usuario (activo/inactivo)
  */
 export const toggleUserStatus = (userId, active) =>
-  apiClient.patch(`/users/${userId}/status`, { active });
+  apiClient.patch(`/api/v1/users/${userId}/status`, { active });

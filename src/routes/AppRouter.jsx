@@ -13,6 +13,7 @@ import AdminUsers from '../pages/admin/Users';
 import AdminBuildings from '../pages/admin/Buildings';
 import AdminUnits from '../pages/admin/Units';
 import AdminMetrics from '../pages/admin/Metrics';
+import DepartmentsAndBuildings from '../pages/admin/DepartmentsAndBuildings';
 import ConciergeLogbook from '../pages/concierge/Logbook';
 import ConciergePackages from '../pages/concierge/Packages';
 import ConciergeVisitors from '../pages/concierge/Visitors';
@@ -58,6 +59,7 @@ const AppRouter = () => (
       <Route path="users" element={<AdminUsers />} />
       <Route path="buildings" element={<AdminBuildings />} />
       <Route path="units" element={<AdminUnits />} />
+      <Route path="departments-buildings" element={<DepartmentsAndBuildings />} />
       <Route path="metrics" element={<AdminMetrics />} />
     </Route>
 

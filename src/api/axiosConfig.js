@@ -1,27 +1,32 @@
 import axios from 'axios';
 
-// Configuración: cambiar USE_MOCK a false para usar backend real
-// NOTA: Si el backend tarda >30s, usar USE_MOCK = true
-const USE_MOCK = true; // Cambiar a false cuando backend esté estable
+// MODO AUTOMÁTICO: Siempre intenta backend real primero
+// Si el backend no responde → automáticamente usa mock data como fallback
+const USE_MOCK = false; // false = Backend real | true = Mock forzado
 
-// Backend real: http://167.194.50.14:8080
-// En modo MOCK: intercepta requests y devuelve datos simulados
+// Backend real: http://168.197.50.14:8080
 const apiClient = axios.create({
-  baseURL: USE_MOCK ? 'http://localhost:3000' : 'http://167.194.50.14:8080',
+  baseURL: 'http://168.197.50.14:8080',
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: USE_MOCK ? 5000 : 30000, // 30s para backend real (puede estar lento)
+  timeout: 2000, // 2s timeout - respuesta ultra rápida si no hay backend
 });
 
-// En modo MOCK, usar mock adapter para devolver datos sin HTTP
-if (USE_MOCK && import.meta.env.DEV) {
-  const { getMockAdapter } = await import('./mockAdapter');
-  apiClient.defaults.adapter = getMockAdapter();
-  console.log('✅ Modo MOCK: Usando mock adapter (sin HTTP)');
-} else if (!USE_MOCK) {
-  console.log('🌐 Modo REAL: Conectando a backend en http://167.194.50.14:8080');
-}
+console.log('🌐 Intentando conectar a backend real: http://168.197.50.14:8080');
+console.log('💡 Si no hay conexión, cambiará automáticamente a datos mock');
+
+console.log('🌐 Intentando conectar a backend real: http://168.197.50.14:8080');
+console.log('💡 Si no hay conexión, cambiará automáticamente a datos mock');
+
+// Eliminar el bloque condicional de mock adapter - se activará automáticamente en el interceptor de error
+// if (USE_MOCK && import.meta.env.DEV) {
+//   const { getMockAdapter } = await import('./mockAdapter');
+//   apiClient.defaults.adapter = getMockAdapter();
+//   console.log('✅ Modo MOCK: Usando mock adapter (sin HTTP)');
+// } else if (!USE_MOCK) {
+//   console.log('🌐 Modo REAL: Conectando a backend en http://167.194.50.14:8080');
+// }
 
 // Interceptor de request: agregar token a todas las requests
 apiClient.interceptors.request.use((config) => {
@@ -44,6 +49,12 @@ apiClient.interceptors.response.use(
     const method = response.config.method?.toUpperCase();
     const url = response.config.url;
 
+    // Desactivar flag de modo mock si la respuesta es exitosa (backend volvió)
+    if (window.__LOBBYSYNC_MOCK_MODE__ === true) {
+      console.log('✅ Backend reconectado - Desactivando modo mock');
+      window.__LOBBYSYNC_MOCK_MODE__ = false;
+    }
+    
     // Log según duración
     if (duration < 100) {
       console.log(`⚡ ${method} ${url}: ${duration.toFixed(2)}ms`);
@@ -51,6 +62,18 @@ apiClient.interceptors.response.use(
       console.warn(`⏱️  ${method} ${url}: ${duration.toFixed(2)}ms`);
     } else {
       console.error(`🐢 ${method} ${url}: ${duration.toFixed(2)}ms (LENTO)`);
+    }
+
+    // CACHÉ: Guardar datos reales del backend para usar como fallback
+    if (method === 'GET' && response.data) {
+      try {
+        const cacheKey = `cache_${url}`;
+        localStorage.setItem(cacheKey, JSON.stringify(response.data));
+        localStorage.setItem('last_real_data_cache_time', new Date().toISOString());
+        console.log(`💾 Datos reales cacheados: ${url}`);
+      } catch (cacheError) {
+        console.warn('⚠️ Error guardando caché:', cacheError.message);
+      }
     }
 
     return response;
@@ -61,19 +84,47 @@ apiClient.interceptors.response.use(
     const method = error.config?.method?.toUpperCase();
     const url = error.config?.url;
     const errorMsg = error.message || 'Unknown error';
+    const errorCode = error.code;
 
-    console.error(`❌ ${method} ${url}: ${duration.toFixed(2)}ms - ${errorMsg}`);
+    console.error(`❌ ${method} ${url}: ${duration.toFixed(2)}ms - ${errorMsg} (code: ${errorCode})`);
+    console.log('🔍 Error details:', { code: errorCode, message: errorMsg, hasResponse: !!error.response });
 
-    // Si es timeout o connection error y NO estamos en MOCK, cambiar a MOCK automáticamente
-    if (!USE_MOCK && (error.code === 'ECONNABORTED' || error.code === 'ECONNREFUSED' || errorMsg.includes('timeout') || errorMsg.includes('Network Error'))) {
-      console.warn('⚠️  Backend no disponible. Cambiando a MOCK automáticamente...');
-      // Cambiar a mock para este y los siguientes requests
-      const { getMockAdapter } = await import('./mockAdapter');
-      apiClient.defaults.adapter = getMockAdapter();
+    // Detectar si es un error de conexión/timeout
+    const isConnectionError = 
+      errorCode === 'ECONNABORTED' || 
+      errorCode === 'ECONNREFUSED' || 
+      errorCode === 'ERR_NETWORK' ||
+      errorCode === 'ETIMEDOUT' ||
+      errorMsg.includes('timeout') || 
+      errorMsg.includes('Network Error') ||
+      errorMsg.includes('Network error') ||
+      !error.response; // Sin respuesta = problema de conexión
+    
+    console.log('🔍 Is connection error?', isConnectionError);
+    
+    if (isConnectionError) {
+      console.warn('⚠️  Backend no disponible. Activando MOCK automáticamente...');
       
-      // Reintentar con mock adapter
-      error.config.metadata = { startTime: performance.now() };
-      return apiClient.request(error.config);
+      // Activar flag de modo mock
+      window.__LOBBYSYNC_MOCK_MODE__ = true;
+      
+      try {
+        // Cambiar a mock adapter para este y los siguientes requests
+        const { getMockAdapter } = await import('./mockAdapter');
+        const mockAdapter = getMockAdapter();
+        apiClient.defaults.adapter = mockAdapter;
+        console.log('✅ Mock adapter cargado');
+        console.log('🔄 Reintentando request con mock...');
+        
+        // Reintentar la misma request con mock adapter
+        error.config.metadata = { startTime: performance.now() };
+        const retryResponse = await apiClient.request(error.config);
+        console.log('✅ Request completada con mock:', retryResponse);
+        return retryResponse;
+      } catch (mockError) {
+        console.error('❌ Error activando mock:', mockError);
+        return Promise.reject(error);
+      }
     }
 
     // Si es 401 (no autorizado), limpiar token

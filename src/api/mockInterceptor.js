@@ -6,6 +6,7 @@
 import {
   MOCK_USERS,
   MOCK_BUILDINGS,
+  MOCK_UNITS,
   MOCK_LOGBOOK,
   MOCK_PACKAGES,
   MOCK_AMENITIES,
@@ -13,6 +14,9 @@ import {
 } from './mockData';
 
 let useMockData = false;
+
+// Flag global para indicar que estamos en modo mock
+window.__LOBBYSYNC_MOCK_MODE__ = false;
 
 // Detectar si debe usar mock data
 if (import.meta.env.DEV) {
@@ -38,11 +42,19 @@ export const setupMockInterceptor = (apiClient) => {
           `⚠️  Backend no disponible (${error.code || error.message}), usando mock data INMEDIATAMENTE`,
         );
         useMockData = true;
+        window.__LOBBYSYNC_MOCK_MODE__ = true;
         return getMockResponse(error.config);
       }
       return Promise.reject(error);
     },
   );
+};
+
+/**
+ * Verifica si está en modo mock
+ */
+export const isMockMode = () => {
+  return window.__LOBBYSYNC_MOCK_MODE__ === true;
 };
 
 /**
@@ -69,6 +81,11 @@ async function getMockResponse(config) {
     // Rutas de edificios
     if (url.includes('/buildings') && method === 'get') {
       return Promise.resolve({ data: MOCK_BUILDINGS, status: 200 });
+    }
+
+    // Rutas de unidades/departamentos
+    if (url.includes('/units') && method === 'get') {
+      return Promise.resolve({ data: MOCK_UNITS, status: 200 });
     }
 
     // Rutas de bitácora

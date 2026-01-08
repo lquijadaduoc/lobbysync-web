@@ -31,11 +31,11 @@ export const adminBuildings = {
 
 // ===== UNIDADES =====
 export const adminUnits = {
-  list: (params = {}) => apiClient.get('/api/units', { params }),
-  get: (unitId) => apiClient.get(`/api/units/${unitId}`),
-  create: (unitData) => apiClient.post('/api/units', unitData),
-  update: (unitId, unitData) => apiClient.put(`/api/units/${unitId}`, unitData),
-  delete: (unitId) => apiClient.delete(`/api/units/${unitId}`),
+  list: (params = {}) => apiClient.get('/api/v1/units', { params }),
+  get: (unitId) => apiClient.get(`/api/v1/units/${unitId}`),
+  create: (unitData) => apiClient.post('/api/v1/units', unitData),
+  update: (unitId, unitData) => apiClient.put(`/api/v1/units/${unitId}`, unitData),
+  delete: (unitId) => apiClient.delete(`/api/v1/units/${unitId}`),
   listByBuilding: (buildingId, params = {}) =>
     apiClient.get(`/api/v1/buildings/${buildingId}/units`, { params }),
 };

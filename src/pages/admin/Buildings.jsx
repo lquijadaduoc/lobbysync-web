@@ -88,7 +88,7 @@ const AdminBuildings = () => {
                     {building.floors || '?'} pisos
                   </Badge>
                   <Badge bg="secondary">
-                    {building.units || '?'} unidades
+                    {building.totalUnits || '?'} unidades
                   </Badge>
                   <div className="ms-3">
                     <Button variant="sm" size="sm" className="me-1">

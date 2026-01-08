@@ -6,6 +6,7 @@
 import {
   MOCK_USERS,
   MOCK_BUILDINGS,
+  MOCK_UNITS,
   MOCK_LOGBOOK,
   MOCK_PACKAGES,
   MOCK_AMENITIES,
@@ -28,7 +29,7 @@ export function getMockAdapter() {
 
     try {
       // Rutas de usuarios
-      if (url.includes('/users') && method === 'GET') {
+      if ((url.includes('/users') || url.includes('/api/v1/users')) && method === 'GET') {
         return {
           data: MOCK_USERS,
           status: 200,
@@ -39,9 +40,20 @@ export function getMockAdapter() {
       }
 
       // Rutas de edificios
-      if (url.includes('/buildings') && method === 'GET') {
+      if ((url.includes('/buildings') || url.includes('/api/v1/buildings')) && method === 'GET') {
         return {
           data: MOCK_BUILDINGS,
+          status: 200,
+          statusText: 'OK',
+          headers: {},
+          config,
+        };
+      }
+
+      // Rutas de unidades/departamentos
+      if ((url.includes('/units') || url.includes('/api/v1/units')) && method === 'GET') {
+        return {
+          data: MOCK_UNITS,
           status: 200,
           statusText: 'OK',
           headers: {},
