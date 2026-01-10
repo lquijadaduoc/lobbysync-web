@@ -1,8 +1,10 @@
 import { useEffect, useState, useRef } from 'react';
 import { Card, Form, Button, Table, Spinner, Alert, Badge } from 'react-bootstrap';
 import { conciergeLogbook } from '../../api/conciergeService';
+import { useAuth } from '../../auth/AuthProvider';
 
 const ConciergeLogbook = () => {
+  const { user } = useAuth();
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -45,15 +47,16 @@ const ConciergeLogbook = () => {
     try {
       setPosting(true);
       setError('');
-      const { data } = await conciergeLogbook.create({
+      await conciergeLogbook.create({
         note: note.trim(),
         timestamp: new Date().toISOString(),
+        user: user?.email || user?.name || 'Usuario desconocido',
       });
       const requestEnd = performance.now();
       console.log(`✅ Create logbook entry: ${(requestEnd - requestStart).toFixed(2)}ms`);
-      
-      setEntries((prev) => [data || { note: note.trim(), timestamp: new Date().toISOString() }, ...prev]);
       setNote('');
+      // Reload entries to avoid duplicates
+      await loadEntries();
     } catch (err) {
       const msg = err.response?.data?.message || err.message || 'Error al crear entrada.';
       setError(msg);
@@ -76,7 +79,14 @@ const ConciergeLogbook = () => {
     <Card className="shadow-sm">
       <Card.Body>
         <Card.Title className="mb-3">Bitácora</Card.Title>
-        {error && <Alert variant="danger">{error}</Alert>}
+        {error && (
+          <Alert variant="danger" className="d-flex justify-content-between align-items-center">
+            <span>{error}</span>
+            <Button size="sm" variant="outline-danger" onClick={loadEntries}>
+              Reintentar
+            </Button>
+          </Alert>
+        )}
         <Form className="d-flex gap-2 mb-3">
           <Form.Control
             placeholder="Escribe una nota rápida"
@@ -103,6 +113,13 @@ const ConciergeLogbook = () => {
           <div className="text-center py-4">
             <Spinner animation="border" variant="primary" className="mb-3" />
             <div className="text-muted">Cargando bitácora...</div>
+          </div>
+        ) : error && entries.length === 0 ? (
+          <div className="text-center py-4 text-muted">
+            <div className="mb-2">⚠️ No se pudo cargar la bitácora</div>
+            <Button size="sm" variant="primary" onClick={loadEntries}>
+              Intentar nuevamente
+            </Button>
           </div>
         ) : (
           <Table hover responsive>
