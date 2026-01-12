@@ -10,6 +10,7 @@ const ConciergeLogbook = () => {
   const [error, setError] = useState('');
   const [note, setNote] = useState('');
   const [posting, setPosting] = useState(false);
+  const [category, setCategory] = useState('general');
   const mountTimeRef = useRef(performance.now());
 
   const loadEntries = async () => {
@@ -49,12 +50,14 @@ const ConciergeLogbook = () => {
       setError('');
       await conciergeLogbook.create({
         note: note.trim(),
+        category: category,
         timestamp: new Date().toISOString(),
         user: user?.email || user?.name || 'Usuario desconocido',
       });
       const requestEnd = performance.now();
       console.log(`✅ Create logbook entry: ${(requestEnd - requestStart).toFixed(2)}ms`);
       setNote('');
+      setCategory('general');
       // Reload entries to avoid duplicates
       await loadEntries();
     } catch (err) {
@@ -66,91 +69,142 @@ const ConciergeLogbook = () => {
     }
   };
 
-  const formatTime = (timestamp) => {
+  const formatDateTime = (timestamp) => {
     if (!timestamp) return 'N/A';
     const date = new Date(timestamp);
-    return date.toLocaleTimeString('es-ES', {
+    return date.toLocaleDateString('es-ES', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }) + ' ' + date.toLocaleTimeString('es-ES', {
       hour: '2-digit',
       minute: '2-digit',
     });
   };
 
   return (
-    <Card className="shadow-sm">
-      <Card.Body>
-        <Card.Title className="mb-3">Bitácora</Card.Title>
-        {error && (
-          <Alert variant="danger" className="d-flex justify-content-between align-items-center">
-            <span>{error}</span>
-            <Button size="sm" variant="outline-danger" onClick={loadEntries}>
-              Reintentar
-            </Button>
-          </Alert>
-        )}
-        <Form className="d-flex gap-2 mb-3">
-          <Form.Control
-            placeholder="Escribe una nota rápida"
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
-            disabled={posting || loading}
-          />
-          <Button
-            variant="primary"
-            onClick={handleAddEntry}
-            disabled={posting || !note.trim() || loading}
-          >
-            {posting ? (
-              <>
-                <Spinner size="sm" animation="border" className="me-2" />
-                Agregando...
-              </>
-            ) : (
-              'Agregar'
-            )}
-          </Button>
-        </Form>
-        {loading ? (
-          <div className="text-center py-4">
-            <Spinner animation="border" variant="primary" className="mb-3" />
-            <div className="text-muted">Cargando bitácora...</div>
-          </div>
-        ) : error && entries.length === 0 ? (
-          <div className="text-center py-4 text-muted">
-            <div className="mb-2">⚠️ No se pudo cargar la bitácora</div>
-            <Button size="sm" variant="primary" onClick={loadEntries}>
-              Intentar nuevamente
-            </Button>
-          </div>
-        ) : (
-          <Table hover responsive>
-            <thead>
-              <tr>
-                <th>Hora</th>
-                <th>Detalle</th>
-                <th>Responsable</th>
-              </tr>
-            </thead>
-            <tbody>
-              {entries.length === 0 ? (
-                <tr>
-                  <td colSpan="3" className="text-center text-muted">
-                    No hay entradas en la bitácora
-                  </td>
-                </tr>
-              ) : (
-                entries.map((entry) => (
-                  <tr key={entry.id || entry.entryId}>
-                    <td>{formatTime(entry.timestamp || entry.createdAt)}</td>
-                    <td>{entry.note || entry.description || 'N/A'}</td>
-                    <td>{entry.user || entry.createdBy || 'N/A'}</td>
+    <div>
+      <div className="d-flex justify-content-between align-items-center mb-3">
+        <h3 className="fw-bold text-primary mb-0">Bitácora Digital</h3>
+        <span className="text-muted">
+          <i className="bi bi-book me-2"></i>
+          Libro de Novedades
+        </span>
+      </div>
+
+      <Card className="shadow-sm">
+        <Card.Body>
+          <Card.Title className="mb-3">Registrar Novedad del Turno</Card.Title>
+          {error && (
+            <Alert variant="danger" className="d-flex justify-content-between align-items-center">
+              <span>{error}</span>
+              <Button size="sm" variant="outline-danger" onClick={loadEntries}>
+                Reintentar
+              </Button>
+            </Alert>
+          )}
+          <Form className="mb-3">
+            <Form.Group className="mb-2">
+              <Form.Label>Categoría</Form.Label>
+              <Form.Select
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                disabled={posting || loading}
+              >
+                <option value="general">General</option>
+                <option value="ruido">Ruido / Molestia</option>
+                <option value="reclamo">Reclamo</option>
+                <option value="reparacion">Reparación / Mantenimiento</option>
+                <option value="seguridad">Seguridad</option>
+                <option value="entrega_turno">Entrega de Turno</option>
+                <option value="emergencia">Emergencia</option>
+              </Form.Select>
+            </Form.Group>
+            <Form.Group className="mb-2">
+              <Form.Label>Detalle de la Novedad</Form.Label>
+              <Form.Control
+                as="textarea"
+                rows={4}
+                placeholder="Describa el suceso del turno de forma detallada (ruidos, reclamos, reparaciones, entrega de turno al relevo, etc.)"
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                disabled={posting || loading}
+              />
+            </Form.Group>
+            <div className="d-flex justify-content-end">
+              <Button
+                variant="primary"
+                size="lg"
+                onClick={handleAddEntry}
+                disabled={posting || !note.trim() || loading}
+              >
+                {posting ? (
+                  <>
+                    <Spinner size="sm" animation="border" className="me-2" />
+                    Registrando...
+                  </>
+                ) : (
+                  <>
+                    <i className="bi bi-journal-plus me-2"></i>
+                    Agregar a Bitácora
+                  </>
+                )}
+              </Button>
+            </div>
+          </Form>
+
+          {loading ? (
+            <div className="text-center py-4">
+              <Spinner animation="border" variant="primary" className="mb-3" />
+              <div className="text-muted">Cargando bitácora...</div>
+            </div>
+          ) : error && entries.length === 0 ? (
+            <div className="text-center py-4 text-muted">
+              <div className="mb-2">⚠️ No se pudo cargar la bitácora</div>
+              <Button size="sm" variant="primary" onClick={loadEntries}>
+                Intentar nuevamente
+              </Button>
+            </div>
+          ) : (
+            <div className="mt-4">
+              <h5 className="mb-3">Historial de Novedades</h5>
+              <Table hover responsive>
+                <thead>
+                  <tr>
+                    <th>Fecha/Hora</th>
+                    <th>Categoría</th>
+                    <th>Detalle</th>
+                    <th>Responsable</th>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </Table>
-        )}
-      </Card.Body>
-    </Card>
+                </thead>
+                <tbody>
+                  {entries.length === 0 ? (
+                    <tr>
+                      <td colSpan="4" className="text-center text-muted">
+                        No hay entradas en la bitácora
+                      </td>
+                    </tr>
+                  ) : (
+                    entries.map((entry) => (
+                      <tr key={entry.id || entry.entryId}>
+                        <td className="text-nowrap">{formatDateTime(entry.timestamp || entry.createdAt)}</td>
+                        <td>
+                          <span className="badge bg-secondary">
+                            {entry.category || 'General'}
+                          </span>
+                        </td>
+                        <td>{entry.note || entry.description || 'N/A'}</td>
+                        <td>{entry.user || entry.createdBy || 'N/A'}</td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </Table>
+            </div>
+          )}
+        </Card.Body>
+      </Card>
+    </div>
   );
 };
 

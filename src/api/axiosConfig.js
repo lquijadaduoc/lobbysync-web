@@ -10,7 +10,7 @@ const apiClient = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 2000, // 2s timeout - respuesta ultra rápida si no hay backend
+  timeout: 10000, // 10s timeout - suficiente para operaciones de Firebase
 });
 
 console.log('🌐 Intentando conectar a backend real: http://168.197.50.14:8080');
@@ -102,7 +102,10 @@ apiClient.interceptors.response.use(
     
     console.log('🔍 Is connection error?', isConnectionError);
     
-    if (isConnectionError) {
+    // NO activar mock para peticiones POST (crear/actualizar datos)
+    const isWriteOperation = method === 'POST' || method === 'PUT' || method === 'PATCH' || method === 'DELETE';
+    
+    if (isConnectionError && !isWriteOperation) {
       console.warn('⚠️  Backend no disponible. Activando MOCK automáticamente...');
       
       // Activar flag de modo mock

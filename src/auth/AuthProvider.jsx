@@ -1,6 +1,12 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { jwtDecode } from 'jwt-decode';
-import { loginRequest, fetchProfile } from '../api/authService';
+import { loginRequest, fetchProfile, syncUserWithBackend } from '../api/authService';
+import { auth } from '../config/firebaseConfig';
+import { 
+  signInWithEmailAndPassword, 
+  signOut as firebaseSignOut,
+  onAuthStateChanged 
+} from 'firebase/auth';
 
 const AuthContext = createContext(null);
 
@@ -34,6 +40,7 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(null);
   const [user, setUser] = useState(null);
   const [initializing, setInitializing] = useState(true);
+  const [firebaseUser, setFirebaseUser] = useState(null);
 
   const setSession = (newToken, decodedUser = null) => {
     if (newToken) {
@@ -54,34 +61,104 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Listener de Firebase Authentication
   useEffect(() => {
-    const storedToken = localStorage.getItem('lobbysync_token');
-    if (storedToken) {
-      setSession(storedToken);
-    }
-    setInitializing(false);
+    const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
+      if (fbUser) {
+        console.log('🔥 Firebase user authenticated:', fbUser.email);
+        setFirebaseUser(fbUser);
+        
+        try {
+          // Obtener token de Firebase
+          const firebaseToken = await fbUser.getIdToken();
+          
+          // Sincronizar con backend
+          const backendUser = await syncUserWithBackend(firebaseToken);
+          
+          // Guardar token y usuario
+          setSession(firebaseToken, {
+            email: fbUser.email,
+            role: backendUser.role || 'RESIDENT',
+            userId: backendUser.id,
+            firebaseUid: fbUser.uid,
+            name: fbUser.displayName || fbUser.email
+          });
+        } catch (error) {
+          console.error('Error syncing with backend:', error);
+          // Fallback con datos de Firebase
+          setSession(null, {
+            email: fbUser.email,
+            role: 'RESIDENT',
+            firebaseUid: fbUser.uid,
+            name: fbUser.displayName || fbUser.email
+          });
+        }
+      } else {
+        console.log('🔥 Firebase user logged out');
+        setFirebaseUser(null);
+        setSession(null);
+      }
+      setInitializing(false);
+    });
+
+    return () => unsubscribe();
   }, []);
 
-  const login = async (credentials) => {
-    const { data } = await loginRequest(credentials);
-    const receivedToken =
-      data?.token || data?.accessToken || data?.access_token || data?.jwt || data?.data?.token || data?.data || data;
-    if (!receivedToken) {
-      throw new Error('No se recibio un token desde el backend.');
-    }
-    const decoded = decodeRole(receivedToken);
-    setSession(receivedToken, decoded);
+  const login = async ({ email, password }) => {
     try {
-      await fetchProfile();
+      console.log('🔑 Attempting Firebase login:', email);
+      
+      // Autenticar con Firebase
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const firebaseToken = await userCredential.user.getIdToken();
+      
+      console.log('✅ Firebase login successful');
+      
+      // Sincronizar con backend
+      const backendUser = await syncUserWithBackend(firebaseToken);
+      
+      const userData = {
+        email: userCredential.user.email,
+        role: backendUser.role || 'RESIDENT',
+        userId: backendUser.id,
+        firebaseUid: userCredential.user.uid,
+        name: userCredential.user.displayName || userCredential.user.email
+      };
+      
+      setSession(firebaseToken, userData);
+      
+      return userData;
     } catch (error) {
-      console.warn('Perfil no disponible todavia', error);
+      console.error('❌ Firebase login error:', error);
+      
+      // Mensajes de error amigables
+      let errorMessage = 'Error al iniciar sesión';
+      if (error.code === 'auth/user-not-found') {
+        errorMessage = 'Usuario no encontrado';
+      } else if (error.code === 'auth/wrong-password') {
+        errorMessage = 'Contraseña incorrecta';
+      } else if (error.code === 'auth/invalid-email') {
+        errorMessage = 'Correo electrónico inválido';
+      } else if (error.code === 'auth/too-many-requests') {
+        errorMessage = 'Demasiados intentos. Intenta más tarde';
+      }
+      
+      throw new Error(errorMessage);
     }
-    setInitializing(false);
-    return decoded;
   };
 
-  const logout = () => {
-    setSession(null);
+  const logout = async () => {
+    try {
+      await firebaseSignOut(auth);
+      setSession(null);
+      setFirebaseUser(null);
+      console.log('✅ Logout successful');
+    } catch (error) {
+      console.error('❌ Logout error:', error);
+      // Forzar logout local aunque Firebase falle
+      setSession(null);
+      setFirebaseUser(null);
+    }
   };
 
   const value = useMemo(

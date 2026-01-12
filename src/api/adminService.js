@@ -8,13 +8,13 @@ import apiClient from './axiosConfig';
 
 // ===== USUARIOS =====
 export const adminUsers = {
-  list: (params = {}) => apiClient.get('/api/users', { params }),
-  get: (userId) => apiClient.get(`/api/users/${userId}`),
-  create: (userData) => apiClient.post('/api/users', userData),
-  update: (userId, userData) => apiClient.put(`/api/users/${userId}`, userData),
-  delete: (userId) => apiClient.delete(`/api/users/${userId}`),
+  list: (params = {}) => apiClient.get('/api/v1/users', { params }),
+  get: (userId) => apiClient.get(`/api/v1/users/${userId}`),
+  create: (userData) => apiClient.post('/api/v1/users', userData),
+  update: (userId, userData) => apiClient.put(`/api/v1/users/${userId}`, userData),
+  delete: (userId) => apiClient.delete(`/api/v1/users/${userId}`),
   toggleStatus: (userId, active) =>
-    apiClient.patch(`/api/users/${userId}/status`, { active }),
+    apiClient.patch(`/api/v1/users/${userId}/status`, { active }),
 };
 
 // ===== EDIFICIOS (v1) =====
@@ -71,4 +71,47 @@ export const adminMetrics = {
   occupancy: () => apiClient.get('/api/metrics/occupancy'),
   activity: () => apiClient.get('/api/metrics/activity'),
   finance: () => apiClient.get('/api/metrics/finance'),
+};
+
+// ===== RESERVACIONES =====
+export const adminReservations = {
+  list: (params = {}) => apiClient.get('/api/reservations', { params }),
+  getById: (id) => apiClient.get(`/api/reservations/${id}`),
+  approve: (id, approved, rejectionReason = null) => 
+    apiClient.post(`/api/reservations/${id}/approve`, { approved, rejectionReason }),
+  updateStatus: (id, status) => 
+    apiClient.patch(`/api/reservations/${id}/status`, null, { params: { status } }),
+};
+
+// ===== PAQUETES =====
+export const adminPackages = {
+  list: (params = {}) => apiClient.get('/api/parcels', { params }),
+  listByStatus: (status, params = {}) => 
+    apiClient.get(`/api/parcels/status/${status}`, { params }),
+};
+
+// ===== TICKETS/MANTENIMIENTO =====
+export const adminTickets = {
+  list: (params = {}) => apiClient.get('/api/tickets', { params }),
+  getById: (id) => apiClient.get(`/api/tickets/${id}`),
+  updateStatus: (id, status) => 
+    apiClient.patch(`/api/tickets/${id}/status`, { status }),
+};
+
+// ===== BROADCASTS/COMUNICACIÓN =====
+export const adminBroadcasts = {
+  list: (params = {}) => apiClient.get('/api/admin/broadcasts', { params }),
+  create: (broadcastData) => apiClient.post('/api/admin/broadcasts', broadcastData),
+  getStats: () => apiClient.get('/api/admin/broadcasts/stats'),
+};
+
+// ===== FINANZAS (ACTUALIZADAS) =====
+export const adminFinances = {
+  getPaymentReports: (params = {}) => apiClient.get('/api/finances/payment-reports', { params }),
+  reviewPayment: (paymentId, approved, reviewedBy) => 
+    apiClient.post(`/api/finances/payment-reports/${paymentId}/review`, { approved, reviewedBy }),
+  getMoroseUnits: () => apiClient.get('/api/finances/morose-units'),
+  generateMonthlyCharges: (month, year, baseAmount) => 
+    apiClient.post('/api/finances/generate-monthly-charges', { month, year, baseAmount }),
+  getFinancialStats: () => apiClient.get('/api/finances/stats'),
 };

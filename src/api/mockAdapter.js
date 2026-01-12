@@ -15,6 +15,8 @@ import {
   MOCK_ACCESS_LOGS,
   MOCK_FINANCE,
   MOCK_MAINTENANCE_TICKETS,
+  MOCK_COMMON_AREAS,
+  MOCK_INVITATIONS,
 } from './mockData';
 
 export function getMockAdapter() {
@@ -89,6 +91,50 @@ export function getMockAdapter() {
       }
 
       // Rutas de paquetes
+      if (url.includes('/parcels') && method === 'GET') {
+        return {
+          data: MOCK_PACKAGES,
+          status: 200,
+          statusText: 'OK',
+          headers: {},
+          config,
+        };
+      }
+
+      // Rutas de áreas comunes
+      if (url.includes('/common-areas') && method === 'GET') {
+        return {
+          data: MOCK_COMMON_AREAS,
+          status: 200,
+          statusText: 'OK',
+          headers: {},
+          config,
+        };
+      }
+
+      // Rutas de reservas
+      if (url.includes('/reservations') && method === 'GET') {
+        return {
+          data: [],
+          status: 200,
+          statusText: 'OK',
+          headers: {},
+          config,
+        };
+      }
+
+      // Rutas de invitaciones
+      if (url.includes('/invitations') && method === 'GET') {
+        return {
+          data: MOCK_INVITATIONS,
+          status: 200,
+          statusText: 'OK',
+          headers: {},
+          config,
+        };
+      }
+
+      // Rutas de paquetes (deprecado)
       if (url.includes('/packages') && method === 'GET') {
         return {
           data: MOCK_PACKAGES,

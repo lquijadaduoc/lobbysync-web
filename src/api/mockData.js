@@ -577,6 +577,79 @@ export const MOCK_MAINTENANCE_TICKETS = [
   },
 ];
 
+export const MOCK_COMMON_AREAS = [
+  {
+    id: 1,
+    name: 'Salón Comunal',
+    description: 'Salón multiusos con capacidad para 30 personas',
+    capacity: 30,
+    buildingId: 1,
+    isActive: true,
+    hourlyRate: 25000,
+  },
+  {
+    id: 2,
+    name: 'Terraza',
+    description: 'Terraza con vista panorámica',
+    capacity: 20,
+    buildingId: 1,
+    isActive: true,
+    hourlyRate: 20000,
+  },
+  {
+    id: 3,
+    name: 'Gimnasio',
+    description: 'Gimnasio completamente equipado',
+    capacity: 15,
+    buildingId: 1,
+    isActive: true,
+    hourlyRate: 0,
+  },
+  {
+    id: 4,
+    name: 'Piscina',
+    description: 'Piscina climatizada',
+    capacity: 25,
+    buildingId: 2,
+    isActive: true,
+    hourlyRate: 15000,
+  },
+  {
+    id: 5,
+    name: 'Sala de Juegos',
+    description: 'Sala con mesa de pool y juegos de mesa',
+    capacity: 10,
+    buildingId: 2,
+    isActive: true,
+    hourlyRate: 10000,
+  },
+];
+
+export const MOCK_INVITATIONS = [
+  {
+    id: 1,
+    guestName: 'Carlos Pérez',
+    unitId: 1,
+    qrToken: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+    validUntil: new Date(Date.now() + 86400000).toISOString(),
+    status: 'ACTIVE',
+    createdBy: 3,
+    createdAt: new Date(Date.now() - 3600000).toISOString(),
+    updatedAt: new Date(Date.now() - 3600000).toISOString(),
+  },
+  {
+    id: 2,
+    guestName: 'María López',
+    unitId: 1,
+    qrToken: 'b2c3d4e5-f6a7-8901-bcde-f12345678901',
+    validUntil: new Date(Date.now() - 86400000).toISOString(),
+    status: 'EXPIRED',
+    createdBy: 3,
+    createdAt: new Date(Date.now() - 172800000).toISOString(),
+    updatedAt: new Date(Date.now() - 172800000).toISOString(),
+  },
+];
+
 export const MOCK_LOGIN_RESPONSE = {
   token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbkBsb2JieXN5bmMuY29tIiwicm9sZSI6IkFETUluIiwiZW1haWwiOiJhZG1pbkBsb2JieXN5bmMuY29tIiwiaWF0IjoxNjM0NTY3ODAwLCJleHAiOjE2MzQ2NTQyMDB9.EMP_TOKEN_FOR_TESTING',
   user: {

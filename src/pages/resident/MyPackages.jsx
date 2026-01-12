@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { Card, Table, Badge, Spinner, Alert } from 'react-bootstrap';
-import { residentPackages } from '../../api/conciergeService';
+import { residentPackages } from '../../api/residentService';
 
 const ResidentPackages = () => {
   const [packages, setPackages] = useState([]);
@@ -48,54 +48,83 @@ const ResidentPackages = () => {
   };
 
   return (
-    <Card className="shadow-sm">
-      <Card.Body>
-        <Card.Title className="mb-3">Mis paquetes</Card.Title>
-        {error && (
-          <Alert variant="danger" className="mb-3">
-            <strong>Error:</strong> {error}
-          </Alert>
-        )}
-        {loading ? (
-          <div className="text-center py-5">
-            <Spinner animation="border" variant="primary" className="mb-3" />
-            <div className="text-muted">Cargando paquetes...</div>
-          </div>
-        ) : (
-          <Table hover responsive>
-            <thead>
-              <tr>
-                <th>Referencia</th>
-                <th>Proveedor</th>
-                <th>Estado</th>
-              </tr>
-            </thead>
-            <tbody>
-              {packages.length === 0 ? (
+    <div>
+      <h3 className="mb-4">📦 Historial de Paquetes</h3>
+      <Card className="shadow-sm">
+        <Card.Body>
+          <Card.Title className="mb-3">
+            Todos mis paquetes recibidos
+            <Badge bg="primary" className="ms-2">{packages.length} total</Badge>
+          </Card.Title>
+          {error && (
+            <Alert variant="danger" className="mb-3">
+              <strong>Error:</strong> {error}
+            </Alert>
+          )}
+          {loading ? (
+            <div className="text-center py-5">
+              <Spinner animation="border" variant="primary" className="mb-3" />
+              <div className="text-muted">Cargando paquetes...</div>
+            </div>
+          ) : (
+            <Table hover responsive>
+              <thead>
                 <tr>
-                  <td colSpan="3" className="text-center text-muted">
-                    No hay paquetes disponibles
-                  </td>
+                  <th>Fecha Recepción</th>
+                  <th>Fecha Entrega</th>
+                  <th>Referencia</th>
+                  <th>Proveedor</th>
+                  <th>Estado</th>
+                  <th>Recibido por</th>
                 </tr>
-              ) : (
-                packages.map((pkg) => (
-                  <tr key={pkg.id || pkg.packageId}>
-                    <td>{pkg.reference || pkg.trackingNumber || 'N/A'}</td>
-                    <td>{pkg.provider || pkg.carrier || 'N/A'}</td>
-                    <td>{getStatusBadge(pkg.status)}</td>
+              </thead>
+              <tbody>
+                {packages.length === 0 ? (
+                  <tr>
+                    <td colSpan="6" className="text-center text-muted py-4">
+                      No hay paquetes disponibles
+                    </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </Table>
-        )}
-      </Card.Body>
-      {packages.length > 0 && (
-        <Card.Footer className="bg-light text-muted small">
-          Total: {packages.length} paquetes
-        </Card.Footer>
-      )}
-    </Card>
+                ) : (
+                  packages.map((pkg) => (
+                    <tr key={pkg.id}>
+                      <td className="text-nowrap">
+                        {pkg.receivedDate ? new Date(pkg.receivedDate).toLocaleDateString('es-CL') : '-'}
+                      </td>
+                      <td className="text-nowrap">
+                        {pkg.deliveredDate ? new Date(pkg.deliveredDate).toLocaleDateString('es-CL') : '-'}
+                      </td>
+                      <td>
+                        <code className="text-primary">{pkg.trackingNumber || pkg.referenceNumber || 'N/A'}</code>
+                      </td>
+                      <td>{pkg.carrier || pkg.provider || 'N/A'}</td>
+                      <td>{getStatusBadge(pkg.status)}</td>
+                      <td>
+                        {pkg.deliveredDate ? (
+                          <span className="text-success">
+                            <i className="bi bi-person-check me-1"></i>
+                            {pkg.deliveredBy || 'Residente'}
+                          </span>
+                        ) : (
+                          <span className="text-muted">En conserjería</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </Table>
+          )}
+
+          {packages.length > 0 && (
+            <div className="text-muted small mt-3">
+              <i className="bi bi-info-circle me-1"></i>
+              Este historial incluye todos los paquetes recibidos desde tu ingreso al edificio.
+            </div>
+          )}
+        </Card.Body>
+      </Card>
+    </div>
   );
 };
 

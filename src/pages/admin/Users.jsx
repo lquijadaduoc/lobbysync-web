@@ -2,34 +2,37 @@ import { useEffect, useState, useRef } from 'react';
 import { Card, Table, Button, Spinner, Alert, Badge } from 'react-bootstrap';
 import { adminUsers } from '../../api/adminService';
 import { DataLoader } from '../../components/LoaderComponents';
+import AddUserModal from '../../components/AddUserModal';
 
 const AdminUsers = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [showAddModal, setShowAddModal] = useState(false);
   const mountTimeRef = useRef(performance.now());
 
-  useEffect(() => {
-    const loadUsers = async () => {
-      const requestStart = performance.now();
-      try {
-        setLoading(true);
-        setError('');
-        const { data } = await adminUsers.list({ limit: 100 });
-        const requestEnd = performance.now();
-        console.log(`📊 Users API response: ${(requestEnd - requestStart).toFixed(2)}ms`);
+  const loadUsers = async () => {
+    const requestStart = performance.now();
+    try {
+      setLoading(true);
+      setError('');
+      const { data } = await adminUsers.list({ limit: 100 });
+      const requestEnd = performance.now();
+      console.log(`📊 Users API response: ${(requestEnd - requestStart).toFixed(2)}ms`);
 
-        // Manejo flexible del response
-        const userList = Array.isArray(data) ? data : data?.content || data?.users || [];
-        setUsers(userList);
-      } catch (err) {
-        const msg = err.response?.data?.message || err.message || 'Error al cargar usuarios.';
-        setError(msg);
-        console.error('Error en adminUsers.list:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
+      // Manejo flexible del response
+      const userList = Array.isArray(data) ? data : data?.content || data?.users || [];
+      setUsers(userList);
+    } catch (err) {
+      const msg = err.response?.data?.message || err.message || 'Error al cargar usuarios.';
+      setError(msg);
+      console.error('Error en adminUsers.list:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     loadUsers();
   }, []);
 
@@ -61,21 +64,27 @@ const AdminUsers = () => {
   };
 
   return (
-    <Card className="shadow-sm">
-      <Card.Body>
-        <div className="d-flex justify-content-between align-items-center mb-3">
-          <Card.Title className="mb-0">Gestión de usuarios</Card.Title>
-          <Button variant="primary" size="sm" disabled={loading}>
-            {loading ? (
-              <>
-                <Spinner size="sm" animation="border" className="me-2" />
-                Cargando...
-              </>
-            ) : (
-              '+ Nuevo usuario'
-            )}
-          </Button>
-        </div>
+    <>
+      <Card className="shadow-sm">
+        <Card.Body>
+          <div className="d-flex justify-content-between align-items-center mb-3">
+            <Card.Title className="mb-0">Gestión de usuarios</Card.Title>
+            <Button 
+              variant="primary" 
+              size="sm" 
+              onClick={() => setShowAddModal(true)}
+              disabled={loading}
+            >
+              {loading ? (
+                <>
+                  <Spinner size="sm" animation="border" className="me-2" />
+                  Cargando...
+                </>
+              ) : (
+                '🔥 + Nuevo usuario'
+              )}
+            </Button>
+          </div>
 
         {error && (
           <Alert variant="danger" className="mb-3">
@@ -129,13 +138,20 @@ const AdminUsers = () => {
             </Table>
           </div>
         )}
-      </Card.Body>
-      {users.length > 0 && (
-        <Card.Footer className="bg-light text-muted small">
-          Total: {users.length} usuarios
-        </Card.Footer>
-      )}
-    </Card>
+        </Card.Body>
+        {users.length > 0 && (
+          <Card.Footer className="bg-light text-muted small">
+            Total: {users.length} usuarios
+          </Card.Footer>
+        )}
+      </Card>
+
+      <AddUserModal
+        show={showAddModal}
+        onHide={() => setShowAddModal(false)}
+        onUserAdded={loadUsers}
+      />
+    </>
   );
 };
 

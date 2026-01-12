@@ -14,14 +14,27 @@ import AdminBuildings from '../pages/admin/Buildings';
 import AdminUnits from '../pages/admin/Units';
 import AdminMetrics from '../pages/admin/Metrics';
 import DepartmentsAndBuildings from '../pages/admin/DepartmentsAndBuildings';
+import ReservationManagement from '../pages/admin/ReservationManagement';
 import ConciergeLogbook from '../pages/concierge/Logbook';
 import ConciergePackages from '../pages/concierge/Packages';
 import ConciergeVisitors from '../pages/concierge/Visitors';
+import VisitsMonitor from '../pages/concierge/VisitsMonitor';
+import ResidentsViewer from '../pages/concierge/ResidentsViewer';
+import CommonAreasCalendar from '../pages/concierge/CommonAreasCalendar';
 import ResidentPackages from '../pages/resident/MyPackages';
 import ResidentBills from '../pages/resident/MyBills';
 import ResidentAccess from '../pages/resident/MyAccess';
 import ResidentInvitation from '../pages/resident/CreateInvitation';
 import ResidentReservation from '../pages/resident/ReserveAmenity';
+import MyInvitations from '../pages/resident/MyInvitations';
+import ResidentFinances from '../pages/resident/Finances';
+import ResidentMyHome from '../pages/resident/MyHome';
+import ResidentTickets from '../pages/resident/Tickets';
+import ResidentDocuments from '../pages/resident/Documents';
+import ResidentWhitelist from '../pages/resident/Whitelist';
+import AdminFinances from '../pages/admin/Finances';
+import AdminBroadcast from '../pages/admin/Broadcast';
+import AdminAudit from '../pages/admin/Audit';
 
 const RoleRedirect = () => {
   const { role } = useAuth();
@@ -60,6 +73,10 @@ const AppRouter = () => (
       <Route path="buildings" element={<AdminBuildings />} />
       <Route path="units" element={<AdminUnits />} />
       <Route path="departments-buildings" element={<DepartmentsAndBuildings />} />
+      <Route path="reservations" element={<ReservationManagement />} />
+      <Route path="finances" element={<AdminFinances />} />
+      <Route path="broadcast" element={<AdminBroadcast />} />
+      <Route path="audit" element={<AdminAudit />} />
       <Route path="metrics" element={<AdminMetrics />} />
     </Route>
 
@@ -71,10 +88,12 @@ const AppRouter = () => (
         </ProtectedRoute>
       }
     >
-      <Route index element={<ConciergeDashboard />} />
+      <Route index element={<VisitsMonitor />} />
       <Route path="logbook" element={<ConciergeLogbook />} />
       <Route path="packages" element={<ConciergePackages />} />
       <Route path="visitors" element={<ConciergeVisitors />} />
+      <Route path="residents" element={<ResidentsViewer />} />
+      <Route path="calendar" element={<CommonAreasCalendar />} />
     </Route>
 
     <Route
@@ -86,11 +105,17 @@ const AppRouter = () => (
       }
     >
       <Route index element={<ResidentDashboard />} />
+      <Route path="finances" element={<ResidentFinances />} />
+      <Route path="amenities" element={<ResidentReservation />} />
       <Route path="packages" element={<ResidentPackages />} />
+      <Route path="tickets" element={<ResidentTickets />} />
+      <Route path="my-home" element={<ResidentMyHome />} />
+      <Route path="documents" element={<ResidentDocuments />} />
+      <Route path="whitelist" element={<ResidentWhitelist />} />
       <Route path="bills" element={<ResidentBills />} />
       <Route path="access" element={<ResidentAccess />} />
       <Route path="invitations" element={<ResidentInvitation />} />
-      <Route path="amenities" element={<ResidentReservation />} />
+      <Route path="my-invitations" element={<MyInvitations />} />
     </Route>
 
     <Route path="/unauthorized" element={<Unauthorized />} />

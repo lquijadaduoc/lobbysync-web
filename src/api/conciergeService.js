@@ -22,30 +22,37 @@ export const conciergeLogbook = {
 
 // ===== PAQUETES (Parcels) =====
 export const conciergePackages = {
-  list: (params = {}) => apiClient.get('/api/v1/parcels', { params }),
-  get: (packageId) => apiClient.get(`/api/v1/parcels/${packageId}`),
-  create: (packageData) => apiClient.post('/api/v1/parcels', packageData),
-  markDelivered: (packageId, deliveryData) =>
-    apiClient.put(`/api/v1/parcels/${packageId}`, deliveryData),
-  delete: (packageId) => apiClient.delete(`/api/v1/parcels/${packageId}`),
-  listByBuilding: (buildingId, params = {}) =>
-    apiClient.get(`/api/v1/parcels/building/${buildingId}`, { params }),
+  list: (params = {}) => apiClient.get('/api/parcels', { params }),
+  listByStatus: (status, params = {}) => apiClient.get(`/api/parcels/status/${status}`, { params }),
+  listByUser: (userId, params = {}) => apiClient.get(`/api/parcels/user/${userId}`, { params }),
+  get: (packageId) => apiClient.get(`/api/parcels/${packageId}`),
+  getByTracking: (trackingNumber) => apiClient.get(`/api/parcels/tracking/${trackingNumber}`),
+  create: (packageData) => apiClient.post('/api/parcels', packageData),
+  updateStatus: (packageId, status) =>
+    apiClient.patch(`/api/parcels/${packageId}/status`, null, { params: { status } }),
+  delete: (packageId) => apiClient.delete(`/api/parcels/${packageId}`),
 };
 
 // ===== VISITANTES =====
 export const conciergeVisitors = {
-  list: (params = {}) => apiClient.get('/visitors', { params }),
-  get: (visitorId) => apiClient.get(`/visitors/${visitorId}`),
-  create: (visitorData) => apiClient.post('/visitors', visitorData),
+  list: (params = {}) => apiClient.get('/api/invitations', { params }),
+  get: (visitorId) => apiClient.get(`/api/invitations/${visitorId}`),
+  create: (visitorData) => apiClient.post('/api/invitations', visitorData),
   update: (visitorId, visitorData) =>
-    apiClient.put(`/visitors/${visitorId}`, visitorData),
-  delete: (visitorId) => apiClient.delete(`/visitors/${visitorId}`),
+    apiClient.put(`/api/invitations/${visitorId}`, visitorData),
+  delete: (visitorId) => apiClient.delete(`/api/invitations/${visitorId}`),
   approve: (visitorId) =>
-    apiClient.patch(`/visitors/${visitorId}/approve`),
+    apiClient.patch(`/api/invitations/${visitorId}/approve`),
   reject: (visitorId) =>
-    apiClient.patch(`/visitors/${visitorId}/reject`),
+    apiClient.patch(`/api/invitations/${visitorId}/reject`),
+  markEntry: (visitorId) =>
+    apiClient.patch(`/api/invitations/${visitorId}/entry`),
+  markExit: (visitorId) =>
+    apiClient.patch(`/api/invitations/${visitorId}/exit`),
   listInvitations: (params = {}) =>
-    apiClient.get('/visitors/invitations', { params }),
+    apiClient.get('/api/invitations', { params }),
+  validateQR: (qrToken) =>
+    apiClient.post('/api/visits/validate', { qrToken }),
 };
 
 // ===== CONTROL DE ACCESO =====
@@ -65,4 +72,38 @@ export const conciergeAccess = {
 export const residentPackages = {
   list: (params = {}) => apiClient.get('/v1/parcels', { params }),
   get: (packageId) => apiClient.get(`/v1/parcels/${packageId}`),
+};
+
+// ===== UNIDADES Y RESIDENTES =====
+export const unitsService = {
+  list: (params = {}) => apiClient.get('/api/v1/units', { params }),
+  get: (unitId) => apiClient.get(`/api/v1/units/${unitId}`),
+  listByBuilding: (buildingId, params = {}) =>
+    apiClient.get(`/api/v1/units/building/${buildingId}`, { params }),
+  listWithResidents: (params = {}) =>
+    apiClient.get('/api/v1/units/with-residents', { params }),
+};
+
+// ===== USUARIOS =====
+export const usersService = {
+  list: (params = {}) => apiClient.get('/api/v1/users', { params }),
+  get: (userId) => apiClient.get(`/api/v1/users/${userId}`),
+  listByUnit: (unitId, params = {}) =>
+    apiClient.get(`/api/v1/users/unit/${unitId}`, { params }),
+  listByBuilding: (buildingId, params = {}) =>
+    apiClient.get(`/api/v1/users/building/${buildingId}`, { params }),
+};
+
+// ===== EDIFICIOS =====
+export const buildingsService = {
+  list: (params = {}) => apiClient.get('/api/v1/buildings', { params }),
+  get: (buildingId) => apiClient.get(`/api/v1/buildings/${buildingId}`),
+};
+
+// ===== ÁREAS COMUNES =====
+export const commonAreasService = {
+  list: (params = {}) => apiClient.get('/api/reservations/common-areas', { params }),
+  get: (areaId) => apiClient.get(`/api/reservations/common-areas/${areaId}`),
+  listByBuilding: (buildingId, params = {}) =>
+    apiClient.get(`/api/reservations/common-areas?buildingId=${buildingId}`, { params }),
 };
