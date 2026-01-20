@@ -2,19 +2,30 @@ import apiClient from './axiosConfig';
 
 // ===== FIREBASE AUTHENTICATION =====
 /**
- * Sincroniza usuario de Firebase con el backend
- * POST /api/auth/sync-user
+ * Sincroniza usuario de Firebase con el backend y obtiene JWT
+ * Primero valida con Firebase, luego hace login en el backend para obtener JWT
  */
 export const syncUserWithBackend = async (firebaseToken) => {
   try {
     console.log('🔄 Syncing user with backend...');
-    const response = await apiClient.post('/api/auth/sync-user', {}, {
-      headers: {
-        'Authorization': `Bearer ${firebaseToken}`
-      }
+    
+    // Decodificar el token de Firebase para obtener el email
+    const decodedToken = JSON.parse(atob(firebaseToken.split('.')[1]));
+    const email = decodedToken.email;
+    
+    // Hacer login en el backend usando el email
+    const response = await apiClient.post('/api/auth/login', {
+      email: email
     });
+    
     console.log('✅ User synced with backend:', response.data);
-    return response.data;
+    
+    // Guardar el JWT del backend
+    if (response.data.token) {
+      localStorage.setItem('lobbysync_token', response.data.token);
+    }
+    
+    return response.data.user || response.data;
   } catch (error) {
     console.error('❌ Error syncing with backend:', error);
     // Retornar datos básicos si falla

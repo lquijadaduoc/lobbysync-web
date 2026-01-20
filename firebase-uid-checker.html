@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase UID Checker - LobbySyncspan></title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #1976d2;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        button {
+            background: #1976d2;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+        }
+        button:hover {
+            background: #1565c0;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            display: none;
+        }
+        .success {
+            background: #e8f5e9;
+            color: #2e7d32;
+            border: 1px solid #4caf50;
+        }
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            border: 1px solid #f44336;
+        }
+        .info {
+            background: #e3f2fd;
+            color: #1565c0;
+            border: 1px solid #2196f3;
+        }
+        .uid-display {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            margin: 10px 0;
+            word-break: break-all;
+        }
+        .sql-query {
+            background: #263238;
+            color: #aed581;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            margin: 10px 0;
+            white-space: pre-wrap;
+            font-size: 13px;
+        }
+        .instructions {
+            background: #fff3e0;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+            border-left: 4px solid #ff9800;
+        }
+        .instructions h3 {
+            margin-top: 0;
+            color: #e65100;
+        }
+        .instructions ol {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        .instructions li {
+            margin: 8px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔥 Firebase UID Checker</h1>
+        <p>Ingresa las credenciales de <strong>resident@lobbysync.com</strong> para obtener su Firebase UID real</p>
+        
+        <div class="form-group">
+            <label for="email">Email:</label>
+            <input type="email" id="email" value="resident@lobbysync.com" placeholder="resident@lobbysync.com">
+        </div>
+        
+        <div class="form-group">
+            <label for="password">Contraseña:</label>
+            <input type="password" id="password" placeholder="Ingresa la contraseña">
+        </div>
+        
+        <button id="loginBtn" onclick="checkUID()">Obtener Firebase UID</button>
+        
+        <div id="result" class="result"></div>
+        
+        <div class="instructions">
+            <h3>📋 Instrucciones:</h3>
+            <ol>
+                <li>Ingresa la contraseña del usuario <code>resident@lobbysync.com</code></li>
+                <li>Haz clic en "Obtener Firebase UID"</li>
+                <li>Copia el UID que se muestra</li>
+                <li>Ejecuta la consulta SQL en PostgreSQL para actualizar el usuario</li>
+            </ol>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getAuth, signInWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDyZyZ80gNbSCdCpAseFVEvLLwDaTqOcPw",
+            authDomain: "lobbysync-91db0.firebaseapp.com",
+            projectId: "lobbysync-91db0",
+            storageBucket: "lobbysync-91db0.firebasestorage.app",
+            messagingSenderId: "946690131650",
+            appId: "1:946690131650:web:a13554da588121e43f9d5b"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        window.checkUID = async function() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const resultDiv = document.getElementById('result');
+            const loginBtn = document.getElementById('loginBtn');
+
+            if (!email || !password) {
+                showResult('Por favor completa todos los campos', 'error');
+                return;
+            }
+
+            loginBtn.disabled = true;
+            loginBtn.textContent = 'Verificando...';
+            resultDiv.style.display = 'none';
+
+            try {
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+
+                const resultHTML = `
+                    <h3>✅ Autenticación Exitosa</h3>
+                    <p><strong>Email:</strong> ${user.email}</p>
+                    <p><strong>Firebase UID:</strong></p>
+                    <div class="uid-display">${user.uid}</div>
+                    <p><strong>Nombre:</strong> ${user.displayName || 'No configurado'}</p>
+                    <p><strong>Verificado:</strong> ${user.emailVerified ? 'Sí' : 'No'}</p>
+                    
+                    <h4>📝 Ejecuta esta consulta SQL en PostgreSQL:</h4>
+                    <div class="sql-query">UPDATE users 
+SET firebase_uid = '${user.uid}', 
+    is_active = true
+WHERE email = '${user.email}';
+
+-- Verificar el cambio
+SELECT id, email, firebase_uid, unit_id, role 
+FROM users 
+WHERE email = '${user.email}';</div>
+                    
+                    <h4>💡 Comando PowerShell (copia y pega):</h4>
+                    <div class="sql-query">$sshTarget = "root@168.197.50.14"
+$query = "UPDATE users SET firebase_uid = '${user.uid}', is_active = true WHERE email = '${user.email}';"
+echo $query | & plink -pw SebaErica12.18 -batch $sshTarget "docker exec -i postgres_db psql -U postgres -d lobbysync"</div>
+                `;
+
+                showResult(resultHTML, 'success');
+
+                // Cerrar sesión automáticamente
+                await auth.signOut();
+
+            } catch (error) {
+                console.error('Error:', error);
+                let errorMessage = 'Error al autenticar: ' + error.message;
+                
+                if (error.code === 'auth/wrong-password') {
+                    errorMessage = '❌ Contraseña incorrecta';
+                } else if (error.code === 'auth/user-not-found') {
+                    errorMessage = '❌ Usuario no encontrado en Firebase';
+                } else if (error.code === 'auth/invalid-email') {
+                    errorMessage = '❌ Email inválido';
+                } else if (error.code === 'auth/too-many-requests') {
+                    errorMessage = '❌ Demasiados intentos. Espera un momento.';
+                }
+                
+                showResult(errorMessage, 'error');
+            } finally {
+                loginBtn.disabled = false;
+                loginBtn.textContent = 'Obtener Firebase UID';
+            }
+        };
+
+        function showResult(html, type) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = html;
+            resultDiv.className = 'result ' + type;
+            resultDiv.style.display = 'block';
+        }
+
+        // Permitir login con Enter
+        document.getElementById('password').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                window.checkUID();
+            }
+        });
+    </script>
+</body>
+</html>

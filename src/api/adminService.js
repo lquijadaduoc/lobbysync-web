@@ -13,6 +13,8 @@ export const adminUsers = {
   create: (userData) => apiClient.post('/api/v1/users', userData),
   update: (userId, userData) => apiClient.put(`/api/v1/users/${userId}`, userData),
   delete: (userId) => apiClient.delete(`/api/v1/users/${userId}`),
+  changePassword: (userId, newPassword) => 
+    apiClient.post(`/api/v1/users/${userId}/change-password`, { newPassword }),
   toggleStatus: (userId, active) =>
     apiClient.patch(`/api/v1/users/${userId}/status`, { active }),
 };

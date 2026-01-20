@@ -72,14 +72,17 @@ export const AuthProvider = ({ children }) => {
           // Obtener token de Firebase
           const firebaseToken = await fbUser.getIdToken();
           
-          // Sincronizar con backend
-          const backendUser = await syncUserWithBackend(firebaseToken);
+          // Sincronizar con backend y obtener JWT del backend
+          const backendResponse = await syncUserWithBackend(firebaseToken);
           
-          // Guardar token y usuario
-          setSession(firebaseToken, {
+          // El JWT del backend ya fue guardado por syncUserWithBackend
+          const backendToken = localStorage.getItem('lobbysync_token');
+          
+          // Guardar token del backend y usuario
+          setSession(backendToken, {
             email: fbUser.email,
-            role: backendUser.role || 'RESIDENT',
-            userId: backendUser.id,
+            role: backendResponse.role || 'RESIDENT',
+            userId: backendResponse.id,
             firebaseUid: fbUser.uid,
             name: fbUser.displayName || fbUser.email
           });
@@ -114,18 +117,21 @@ export const AuthProvider = ({ children }) => {
       
       console.log('✅ Firebase login successful');
       
-      // Sincronizar con backend
-      const backendUser = await syncUserWithBackend(firebaseToken);
+      // Sincronizar con backend y obtener JWT del backend
+      const backendResponse = await syncUserWithBackend(firebaseToken);
+      
+      // El JWT del backend ya fue guardado por syncUserWithBackend
+      const backendToken = localStorage.getItem('lobbysync_token');
       
       const userData = {
         email: userCredential.user.email,
-        role: backendUser.role || 'RESIDENT',
-        userId: backendUser.id,
+        role: backendResponse.role || 'RESIDENT',
+        userId: backendResponse.id,
         firebaseUid: userCredential.user.uid,
         name: userCredential.user.displayName || userCredential.user.email
       };
       
-      setSession(firebaseToken, userData);
+      setSession(backendToken, userData);
       
       return userData;
     } catch (error) {

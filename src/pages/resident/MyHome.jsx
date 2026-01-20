@@ -22,40 +22,18 @@ const ResidentMyHome = () => {
       setLoading(true);
       setError('');
 
-      // Nota: Los endpoints /api/home/* no están implementados en el backend aún
-      // Por ahora se muestran datos de ejemplo o vacíos
+      // Cargar datos del hogar desde la API
       const [familyResp, petsResp, vehiclesResp] = await Promise.all([
-        residentsService.getFamilyMembers().catch(err => {
-          if (err.response?.status === 404) {
-            console.log('Endpoint /api/home/family no disponible');
-            return { data: [] };
-          }
-          throw err;
-        }),
-        residentsService.getPets().catch(err => {
-          if (err.response?.status === 404) {
-            console.log('Endpoint /api/home/pets no disponible');
-            return { data: [] };
-          }
-          throw err;
-        }),
-        residentsService.getVehicles().catch(err => {
-          if (err.response?.status === 404) {
-            console.log('Endpoint /api/home/vehicles no disponible');
-            return { data: [] };
-          }
-          throw err;
-        })
+        residentsService.getFamilyMembers(),
+        residentsService.getPets(),
+        residentsService.getVehicles()
       ]);
 
       setFamilyMembers(Array.isArray(familyResp.data) ? familyResp.data : familyResp.data?.content || []);
       setPets(Array.isArray(petsResp.data) ? petsResp.data : petsResp.data?.content || []);
       setVehicles(Array.isArray(vehiclesResp.data) ? vehiclesResp.data : vehiclesResp.data?.content || []);
     } catch (err) {
-      // Si no es un error 404, mostrar el error
-      if (err.response?.status !== 404) {
-        setError(err.message || 'Error al cargar datos del hogar');
-      }
+      setError(err.message || 'Error al cargar datos del hogar');
       console.error('Error:', err);
     } finally {
       setLoading(false);
@@ -135,11 +113,6 @@ const ResidentMyHome = () => {
   return (
     <div>
       <h3 className="mb-4">👥 Mi Hogar</h3>
-
-      <Alert variant="info" className="mb-3">
-        <i className="bi bi-info-circle me-2"></i>
-        <strong>Funcionalidad en desarrollo:</strong> La gestión de familia, mascotas y vehículos requiere endpoints backend adicionales (/api/home/*) que aún no están implementados.
-      </Alert>
 
       {error && <Alert variant="danger">{error}</Alert>}
 

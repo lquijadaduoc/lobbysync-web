@@ -1,14 +1,20 @@
 import { useEffect, useState, useRef } from 'react';
-import { Card, Table, Button, Spinner, Alert, Badge } from 'react-bootstrap';
+import { Card, Table, Button, Spinner, Alert, Badge, Dropdown } from 'react-bootstrap';
 import { adminUsers } from '../../api/adminService';
 import { DataLoader } from '../../components/LoaderComponents';
 import AddUserModal from '../../components/AddUserModal';
+import EditUserModal from '../../components/EditUserModal';
+import ChangePasswordModal from '../../components/ChangePasswordModal';
 
 const AdminUsers = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
   const mountTimeRef = useRef(performance.now());
 
   const loadUsers = async () => {
@@ -61,6 +67,38 @@ const AdminUsers = () => {
     if (roleLower.includes('RESIDENT'))
       return <Badge bg="primary">RESIDENT</Badge>;
     return <Badge bg="secondary">{role}</Badge>;
+  };
+
+  const handleEdit = (user) => {
+    setSelectedUser(user);
+    setShowEditModal(true);
+  };
+
+  const handleChangePassword = (user) => {
+    setSelectedUser(user);
+    setShowPasswordModal(true);
+  };
+
+  const handleDelete = async (user) => {
+    if (deleteConfirm === user.id) {
+      try {
+        await adminUsers.delete(user.id);
+        setUsers(users.filter(u => u.id !== user.id));
+        setDeleteConfirm(null);
+        console.log('✅ Usuario eliminado:', user.email);
+      } catch (err) {
+        setError('Error al eliminar usuario: ' + (err.response?.data?.error || err.message));
+        console.error('Error deleting user:', err);
+      }
+    } else {
+      setDeleteConfirm(user.id);
+      // Auto-cancelar después de 3 segundos
+      setTimeout(() => setDeleteConfirm(null), 3000);
+    }
+  };
+
+  const handleUserUpdated = (updatedUser) => {
+    setUsers(users.map(u => u.id === updatedUser.id ? updatedUser : u));
   };
 
   return (
@@ -125,12 +163,30 @@ const AdminUsers = () => {
                     <td>{getRoleBadge(user.role || user.rol)}</td>
                     <td>{getStatusBadge(user.status || user.active)}</td>
                     <td>
-                      <Button variant="sm" size="sm" className="me-1">
-                        Editar
-                      </Button>
-                      <Button variant="danger" size="sm">
-                        Eliminar
-                      </Button>
+                      <Dropdown>
+                        <Dropdown.Toggle variant="outline-primary" size="sm" id={`dropdown-${user.id}`}>
+                          Acciones
+                        </Dropdown.Toggle>
+                        <Dropdown.Menu>
+                          <Dropdown.Item onClick={() => handleEdit(user)}>
+                            ✏️ Editar
+                          </Dropdown.Item>
+                          <Dropdown.Item onClick={() => handleChangePassword(user)}>
+                            🔐 Cambiar Contraseña
+                          </Dropdown.Item>
+                          <Dropdown.Divider />
+                          <Dropdown.Item
+                            className="text-danger"
+                            onClick={() => handleDelete(user)}
+                          >
+                            {deleteConfirm === user.id ? (
+                              '⚠️ ¿Confirmar eliminación?'
+                            ) : (
+                              '🗑️ Eliminar'
+                            )}
+                          </Dropdown.Item>
+                        </Dropdown.Menu>
+                      </Dropdown>
                     </td>
                   </tr>
                 ))}
@@ -150,6 +206,25 @@ const AdminUsers = () => {
         show={showAddModal}
         onHide={() => setShowAddModal(false)}
         onUserAdded={loadUsers}
+      />
+
+      <EditUserModal
+        show={showEditModal}
+        onHide={() => {
+          setShowEditModal(false);
+          setSelectedUser(null);
+        }}
+        user={selectedUser}
+        onUserUpdated={handleUserUpdated}
+      />
+
+      <ChangePasswordModal
+        show={showPasswordModal}
+        onHide={() => {
+          setShowPasswordModal(false);
+          setSelectedUser(null);
+        }}
+        user={selectedUser}
       />
     </>
   );

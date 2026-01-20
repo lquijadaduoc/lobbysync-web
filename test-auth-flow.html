@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Auth Flow - LobbySync</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1000px;
+            margin: 30px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #1976d2;
+            margin-bottom: 20px;
+        }
+        .step {
+            background: #f9f9f9;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+            border-left: 4px solid #1976d2;
+        }
+        .step h3 {
+            margin-top: 0;
+            color: #1976d2;
+        }
+        button {
+            background: #1976d2;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px;
+        }
+        button:hover {
+            background: #1565c0;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .result {
+            background: #263238;
+            color: #aed581;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            margin: 10px 0;
+            white-space: pre-wrap;
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .success { color: #4caf50; }
+        .error { color: #f44336; }
+        .info { color: #2196f3; }
+        .warning { color: #ff9800; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 Test Authentication Flow</h1>
+        <p>Testing: resident@lobbysync.com</p>
+
+        <div class="step">
+            <h3>Step 1: Login with Firebase</h3>
+            <button onclick="testFirebaseLogin()">🔥 Login with Firebase</button>
+            <div id="firebaseResult" class="result" style="display:none;"></div>
+        </div>
+
+        <div class="step">
+            <h3>Step 2: Get Backend JWT Token</h3>
+            <button onclick="testBackendLogin()" id="backendLoginBtn" disabled>🔑 Get Backend Token</button>
+            <div id="backendResult" class="result" style="display:none;"></div>
+        </div>
+
+        <div class="step">
+            <h3>Step 3: Get User Info (/api/v1/users/me)</h3>
+            <button onclick="testGetUserMe()" id="userMeBtn" disabled>👤 Get User Info</button>
+            <div id="userMeResult" class="result" style="display:none;"></div>
+        </div>
+
+        <div class="step">
+            <h3>Step 4: Get Family Members (/api/home/family)</h3>
+            <button onclick="testGetFamily()" id="familyBtn" disabled>👨‍👩‍👧‍👦 Get Family</button>
+            <div id="familyResult" class="result" style="display:none;"></div>
+        </div>
+
+        <div class="step">
+            <h3>Step 5: Get Pets (/api/home/pets)</h3>
+            <button onclick="testGetPets()" id="petsBtn" disabled>🐾 Get Pets</button>
+            <div id="petsResult" class="result" style="display:none;"></div>
+        </div>
+
+        <div class="step">
+            <h3>Step 6: Get Vehicles (/api/home/vehicles)</h3>
+            <button onclick="testGetVehicles()" id="vehiclesBtn" disabled>🚗 Get Vehicles</button>
+            <div id="vehiclesResult" class="result" style="display:none;"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getAuth, signInWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDyZyZ80gNbSCdCpAseFVEvLLwDaTqOcPw",
+            authDomain: "lobbysync-91db0.firebaseapp.com",
+            projectId: "lobbysync-91db0",
+            storageBucket: "lobbysync-91db0.firebasestorage.app",
+            messagingSenderId: "946690131650",
+            appId: "1:946690131650:web:a13554da588121e43f9d5b"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        
+        const API_BASE = 'http://168.197.50.14:8080';
+        
+        let firebaseToken = null;
+        let backendToken = null;
+
+        window.testFirebaseLogin = async function() {
+            const resultDiv = document.getElementById('firebaseResult');
+            resultDiv.style.display = 'block';
+            resultDiv.textContent = '⏳ Logging in to Firebase...';
+
+            try {
+                const userCredential = await signInWithEmailAndPassword(auth, 'resident@lobbysync.com', 'admin123');
+                const user = userCredential.user;
+                firebaseToken = await user.getIdToken();
+
+                resultDiv.innerHTML = `<span class="success">✅ Firebase Login Successful!</span>
+                
+<span class="info">Firebase UID:</span> ${user.uid}
+<span class="info">Email:</span> ${user.email}
+<span class="info">Firebase Token (first 50 chars):</span> ${firebaseToken.substring(0, 50)}...
+
+<span class="warning">📝 Token saved. Now click "Get Backend Token"</span>`;
+
+                document.getElementById('backendLoginBtn').disabled = false;
+
+            } catch (error) {
+                resultDiv.innerHTML = `<span class="error">❌ Firebase Login Failed</span>
+${error.code}: ${error.message}`;
+            }
+        };
+
+        window.testBackendLogin = async function() {
+            const resultDiv = document.getElementById('backendResult');
+            resultDiv.style.display = 'block';
+            resultDiv.textContent = '⏳ Getting backend token...';
+
+            try {
+                const response = await fetch(`${API_BASE}/api/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: 'resident@lobbysync.com'
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`HTTP ${response.status}: ${errorText}`);
+                }
+
+                const data = await response.json();
+                backendToken = data.token;
+
+                resultDiv.innerHTML = `<span class="success">✅ Backend Login Successful!</span>
+                
+<span class="info">Backend JWT Token (first 50 chars):</span> ${backendToken.substring(0, 50)}...
+<span class="info">User ID:</span> ${data.userId || 'N/A'}
+<span class="info">Role:</span> ${data.role || 'N/A'}
+
+<span class="warning">📝 Token saved. Now test the endpoints!</span>`;
+
+                document.getElementById('userMeBtn').disabled = false;
+                document.getElementById('familyBtn').disabled = false;
+                document.getElementById('petsBtn').disabled = false;
+                document.getElementById('vehiclesBtn').disabled = false;
+
+            } catch (error) {
+                resultDiv.innerHTML = `<span class="error">❌ Backend Login Failed</span>
+${error.message}`;
+            }
+        };
+
+        window.testGetUserMe = async function() {
+            const resultDiv = document.getElementById('userMeResult');
+            resultDiv.style.display = 'block';
+            resultDiv.textContent = '⏳ Fetching user info...';
+
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/users/me`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${backendToken}`,
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`HTTP ${response.status}: ${errorText}`);
+                }
+
+                const data = await response.json();
+
+                resultDiv.innerHTML = `<span class="success">✅ User Info Retrieved!</span>
+                
+${JSON.stringify(data, null, 2)}`;
+
+            } catch (error) {
+                resultDiv.innerHTML = `<span class="error">❌ Failed to get user info</span>
+${error.message}`;
+            }
+        };
+
+        window.testGetFamily = async function() {
+            const resultDiv = document.getElementById('familyResult');
+            resultDiv.style.display = 'block';
+            resultDiv.textContent = '⏳ Fetching family members...';
+
+            try {
+                const response = await fetch(`${API_BASE}/api/home/family`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${backendToken}`,
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`HTTP ${response.status}: ${errorText}`);
+                }
+
+                const data = await response.json();
+
+                resultDiv.innerHTML = `<span class="success">✅ Found ${data.length} family members!</span>
+                
+${JSON.stringify(data, null, 2)}`;
+
+            } catch (error) {
+                resultDiv.innerHTML = `<span class="error">❌ Failed to get family members</span>
+${error.message}`;
+            }
+        };
+
+        window.testGetPets = async function() {
+            const resultDiv = document.getElementById('petsResult');
+            resultDiv.style.display = 'block';
+            resultDiv.textContent = '⏳ Fetching pets...';
+
+            try {
+                const response = await fetch(`${API_BASE}/api/home/pets`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${backendToken}`,
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`HTTP ${response.status}: ${errorText}`);
+                }
+
+                const data = await response.json();
+
+                resultDiv.innerHTML = `<span class="success">✅ Found ${data.length} pets!</span>
+                
+${JSON.stringify(data, null, 2)}`;
+
+            } catch (error) {
+                resultDiv.innerHTML = `<span class="error">❌ Failed to get pets</span>
+${error.message}`;
+            }
+        };
+
+        window.testGetVehicles = async function() {
+            const resultDiv = document.getElementById('vehiclesResult');
+            resultDiv.style.display = 'block';
+            resultDiv.textContent = '⏳ Fetching vehicles...';
+
+            try {
+                const response = await fetch(`${API_BASE}/api/home/vehicles`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${backendToken}`,
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`HTTP ${response.status}: ${errorText}`);
+                }
+
+                const data = await response.json();
+
+                resultDiv.innerHTML = `<span class="success">✅ Found ${data.length} vehicles!</span>
+                
+${JSON.stringify(data, null, 2)}`;
+
+            } catch (error) {
+                resultDiv.innerHTML = `<span class="error">❌ Failed to get vehicles</span>
+${error.message}`;
+            }
+        };
+    </script>
+</body>
+</html>

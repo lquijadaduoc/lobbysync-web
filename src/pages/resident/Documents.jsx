@@ -71,11 +71,6 @@ const ResidentDocuments = () => {
     <div>
       <h3 className="mb-4">📄 Biblioteca de Documentos</h3>
 
-      <Alert variant="info" className="mb-3">
-        <i className="bi bi-info-circle me-2"></i>
-        <strong>Funcionalidad en desarrollo:</strong> La biblioteca de documentos requiere el endpoint backend /api/documents que aún no está implementado. Los documentos se pueden gestionar a través de /api/files cuando esté disponible.
-      </Alert>
-
       {error && <Alert variant="danger">{error}</Alert>}
 
       {documents.length === 0 ? (
