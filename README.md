@@ -1,50 +1,93 @@
-# 🏢 LobbySync - Property Management Web Application
+# 🏢 LobbySync Frontend - Property Management Web Application
 
-Aplicación web moderna para gestión de propiedades, conserjes, residentes y administradores. Construida con **React 18**, **Vite 7**, **Bootstrap 5** y **Axios**.
+Aplicación web moderna para gestión de propiedades residenciales y comerciales. Construida con **React 18**, **Vite 7**, **Bootstrap 5**, **React Bootstrap** y **Firebase Authentication**.
 
 ## 🎯 Características Principales
 
 ### 🔐 Autenticación & Seguridad
-- Login seguro con JWT
-- Roles basados en acceso (Admin, Conserje, Residente)
-- Rutas protegidas por rol
+- **Firebase Authentication** con email/password
+- Sistema de roles (Admin, Conserje, Residente, Finance)
+- Rutas protegidas por rol con React Router
 - Persistencia de sesión con localStorage
-- Token mapping flexible para múltiples backends
+- Token JWT desde backend
+- Refresh token automático
 
-### 👨‍💼 Panel de Administrador
-- Gestión de usuarios (listar, crear, editar, eliminar)
-- Gestión de edificios con detalles (pisos, unidades)
+### 👨‍💼 Panel de Administrador (v1.1.0) ✨
+
+#### 👥 Gestión Completa de Usuarios - NUEVO
+- **Crear Usuarios**: Modal con integración Firebase
+  - Campos: Email, contraseña, nombre, apellido, teléfono, rol
+  - Asignación de departamento (solo para residentes)
+  - Validación de formularios
+  - Creación simultánea en Firebase + PostgreSQL
+  
+- **Editar Usuarios**: Modal de edición completo
+  - Editar nombre, apellido, teléfono, rol, departamento
+  - Cambiar estado (activo/inactivo)
+  - Email no editable (restricción Firebase)
+  - Actualización sincronizada con Firebase displayName
+  
+- **Cambiar Contraseña**: Modal dedicado
+  - Indicador de fortaleza de contraseña (débil/regular/buena/fuerte)
+  - Barra de progreso visual (roja/amarilla/azul/verde)
+  - Confirmación de contraseña
+  - Actualización directa en Firebase
+  
+- **Eliminar Usuarios**: 
+  - Confirmación con doble clic
+  - Eliminación bidireccional (Firebase + PostgreSQL)
+  - Prevención de eliminación accidental
+
+- **Lista de Usuarios**:
+  - Tabla con email, nombre, rol, teléfono, estado
+  - Dropdown de acciones por usuario (Editar, Cambiar Contraseña, Eliminar)
+  - Badges de rol con colores
+  - Badges de estado activo/inactivo
+
+#### 🏢 Gestión de Edificios
+- CRUD completo de edificios
 - Dashboard con métricas
 - Gestión de unidades por edificio
-- Badges visuales para rol y estado
+- Detalles: pisos, unidades, amenidades
+
+#### 📊 Dashboard
+- Estadísticas en tiempo real
+- Métricas de usuarios, edificios, paquetes
+- Gráficos visuales
 
 ### 🔔 Panel de Conserje
-- Bitácora de eventos con prioridades
-- Gestión de paquetes (recibidos, entregados, pendientes)
-- Registro de visitantes
-- Control de acceso
-- Timestamps automáticos
+- **Bitácora de Eventos**: Registro con prioridades (alta/media/baja)
+- **Gestión de Paquetes**: 
+  - Estados: Recibido, Entregado, Pendiente
+  - Notificaciones automáticas
+  - Timestamps de entrada/salida
+- **Registro de Visitantes**: Control de acceso con check-in/check-out
+- **Invitaciones**: Validación de códigos QR
 
 ### 👤 Portal de Residente
-- Ver mis paquetes con estado
-- Crear invitaciones para visitantes
-- Reservar amenidades (gym, piscina, etc.)
-- Notificaciones de paquetes
+- **Mis Paquetes**: Ver estado de mis entregas
+- **Invitaciones**: Crear códigos para visitantes
+- **Reservas**: Áreas comunes (gym, piscina, salón de eventos)
+- **Notificaciones**: Alertas de paquetes y aprobaciones
 
 ## 🚀 Quick Start
 
 ### Requisitos
 - Node.js 18+
 - npm 9+
+- Cuenta Firebase (para autenticación)
 
 ### Instalación
 ```bash
 # Clonar repositorio
-git clone https://github.com/tu-usuario/lobbysync-web.git
+git clone https://github.com/lquijadaduoc/lobbysync-web.git
 cd lobbysync-web
 
 # Instalar dependencias
 npm install
+
+# Configurar Firebase (ver sección siguiente)
+# Editar src/config/firebase.js con tus credenciales
 
 # Iniciar desarrollo
 npm run dev
@@ -52,254 +95,298 @@ npm run dev
 
 Abre [http://localhost:5173](http://localhost:5173)
 
-### Credenciales de Prueba
+## 🔥 Configuración Firebase
+
+### Paso 1: Crear Proyecto Firebase
+
+1. Ir a [Firebase Console](https://console.firebase.google.com)
+2. Crear proyecto: `lobbysync-91db0` (o tu nombre)
+3. Habilitar **Authentication** → **Email/Password**
+
+### Paso 2: Obtener Configuración Web
+
+1. Project Settings → General
+2. Scroll a **Your apps** → Web app (</> icon)
+3. Copiar `firebaseConfig` object
+
+### Paso 3: Configurar en el Proyecto
+
+Editar [src/config/firebase.js](src/config/firebase.js):
+
+```javascript
+const firebaseConfig = {
+  apiKey: "AIzaSyD...",
+  authDomain: "lobbysync-91db0.firebaseapp.com",
+  projectId: "lobbysync-91db0",
+  storageBucket: "lobbysync-91db0.firebasestorage.app",
+  messagingSenderId: "123456789",
+  appId: "1:123456789:web:xxxxx"
+};
 ```
-Usuario: admin          | Contraseña: password123  | Rol: Admin
-Usuario: conserje       | Contraseña: password123  | Rol: Conserje
-Usuario: resident       | Contraseña: password123  | Rol: Residente
-Usuario: juan_perez     | Contraseña: password123  | Rol: Residente
-Usuario: maria_garcia   | Contraseña: password123  | Rol: Residente
+
+## 🔗 Configuración Backend
+
+Editar [src/api/axiosConfig.js](src/api/axiosConfig.js):
+
+```javascript
+const axiosInstance = axios.create({
+  baseURL: 'http://168.197.50.14:8080',  // URL de producción
+  // o
+  baseURL: 'http://localhost:8080',      // URL de desarrollo local
+  timeout: 30000,
+  headers: { 'Content-Type': 'application/json' }
+});
 ```
+
+## 👥 Credenciales de Prueba
+
+```
+Email: admin@lobbysync.com    | Password: password123  | Rol: ADMIN
+Email: conserje@lobbysync.com | Password: password123  | Rol: CONCIERGE  
+Email: residente@lobbysync.com| Password: password123  | Rol: RESIDENT
+```
+
+**IMPORTANTE**: Estos usuarios deben existir en Firebase Authentication. Ver [GUIA_FIREBASE_SETUP.md](GUIA_FIREBASE_SETUP.md) en el backend para crearlos.
 
 ## 📦 Build & Deployment
 
 ### Build para Producción
 ```bash
+# Generar build optimizado
 npm run build          # Crea carpeta dist/
-npm run preview        # Prueba build localmente
+
+# Probar build localmente
+npm run preview        # http://localhost:4173
 ```
 
-### Deploy
+### Deploy a Vercel
 ```bash
-# Vercel
-vercel deploy
+# Instalar Vercel CLI
+npm i -g vercel
 
-# Netlify
-netlify deploy
-
-# O servidor manual
-npm run build && cp -r dist/* /var/www/html/
+# Deploy
+vercel deploy --prod
 ```
 
-## 📋 Documentación
+### Deploy a Netlify
+```bash
+# Instalar Netlify CLI
+npm i -g netlify-cli
 
-| Documento | Contenido |
-|-----------|-----------|
-| [TESTING_CHECKLIST.md](./TESTING_CHECKLIST.md) | 28 pruebas manuales completas |
-| [DELIVERY_SUMMARY.md](./DELIVERY_SUMMARY.md) | Resumen de implementación |
-| [BACKEND_INTEGRATION_GUIDE.md](./BACKEND_INTEGRATION_GUIDE.md) | Guía para conectar backend real |
-| [DEBUGGING_PERFORMANCE.md](./DEBUGGING_PERFORMANCE.md) | Guía de performance y debugging |
-| [FINAL_STATUS.md](./FINAL_STATUS.md) | Estado del proyecto |
+# Deploy
+netlify deploy --prod --dir=dist
+```
+
+### Deploy Manual (VPS)
+```bash
+# Compilar
+npm run build
+
+# Copiar a servidor
+scp -r dist/* usuario@servidor:/var/www/html/
+
+# O usando rsync
+rsync -avz --delete dist/ usuario@servidor:/var/www/html/
+```
 
 ## 🏗️ Estructura del Proyecto
 
 ```
 src/
-├── api/
-│   ├── authService.js           ← Autenticación
-│   ├── adminService.js          ← Servicios admin (usuarios, edificios, etc.)
-│   ├── conciergeService.js      ← Servicios conserje (bitácora, paquetes, etc.)
-│   ├── axiosConfig.js           ← Configuración HTTP con interceptores
-│   └── mockData.js              ← Datos de prueba
-├── auth/
-│   └── AuthProvider.jsx         ← Context de autenticación
-├── components/
-│   ├── AppNavbar.jsx            ← Navbar con menú
-│   ├── Sidebar.jsx              ← Sidebar de navegación
-│   └── layouts/                 ← Layouts por rol
-├── pages/
+├── api/                          ← Servicios HTTP
+│   ├── axiosConfig.js           ← Configuración Axios con interceptors
+│   ├── authService.js           ← Login, logout, refresh token
+│   ├── adminService.js          ← Usuarios, edificios, unidades
+│   ├── conciergeService.js      ← Paquetes, bitácora, visitantes
+│   ├── residentService.js       ← Mis paquetes, invitaciones, reservas
+│   ├── jwtHelper.js             ← Decodificación JWT
+│   └── mockAdapter.js           ← Mock data para desarrollo
+│
+├── auth/                        ← Autenticación
+│   └── AuthProvider.jsx         ← Context API con Firebase
+│
+├── components/                  ← Componentes reutilizables
+│   ├── AppNavbar.jsx           ← Navbar responsive
+│   ├── AddUserModal.jsx        ← ✨ Modal crear usuario
+│   ├── EditUserModal.jsx       ← ✨ Modal editar usuario (NUEVO v1.1.0)
+│   ├── ChangePasswordModal.jsx ← ✨ Modal cambiar contraseña (NUEVO v1.1.0)
+│   ├── AddBuildingModal.jsx    ← Modal crear edificio
+│   ├── ProtectedRoute.jsx      ← HOC para rutas protegidas
+│   └── ...                      ← Otros componentes
+│
+├── config/                      ← Configuración
+│   └── firebase.js              ← Configuración Firebase SDK
+│
+├── pages/                       ← Vistas principales
 │   ├── admin/
-│   │   ├── Users.jsx            ← Gestión de usuarios
-│   │   ├── Buildings.jsx        ← Gestión de edificios
-│   │   ├── Units.jsx            ← Gestión de unidades
-│   │   └── Metrics.jsx          ← Dashboard de métricas
+│   │   ├── AdminDashboard.jsx  ← Dashboard con métricas
+│   │   ├── Buildings.jsx       ← Gestión edificios
+│   │   ├── Units.jsx           ← Gestión unidades
+│   │   ├── Users.jsx           ← ✨ Gestión usuarios CRUD completo (v1.1.0)
+│   │   └── ...
 │   ├── concierge/
-│   │   ├── Logbook.jsx          ← Bitácora
-│   │   ├── Packages.jsx         ← Paquetes
-│   │   └── Visitors.jsx         ← Visitantes
+│   │   ├── Logbook.jsx         ← Bitácora de eventos
+│   │   ├── Parcels.jsx         ← Gestión paquetes
+│   │   └── Visitors.jsx        ← Control visitantes
 │   ├── resident/
-│   │   ├── MyPackages.jsx       ← Mis paquetes
-│   │   ├── CreateInvitation.jsx ← Crear invitación
-│   │   └── ReserveAmenity.jsx   ← Reservar amenidad
-│   └── auth/
-│       └── Login.jsx            ← Página de login
-└── routes/
-    ├── AppRouter.jsx            ← Enrutamiento
-    └── ProtectedRoute.jsx       ← Rutas protegidas
+│   │   ├── MyParcels.jsx       ← Mis paquetes
+│   │   ├── Invitations.jsx     ← Mis invitaciones
+│   │   └── Reservations.jsx    ← Reservar áreas comunes
+│   └── Login.jsx                ← Login con Firebase
+│
+├── routes/                      ← Configuración rutas
+│   └── AppRoutes.jsx           ← React Router con roles
+│
+├── utils/                       ← Utilidades
+│   └── validators.js           ← Validación de formularios
+│
+├── App.jsx                      ← Componente raíz
+├── main.jsx                     ← Entry point (ReactDOM)
+└── index.css                    ← Estilos globales
 ```
 
-## 🔌 API Endpoints
+## 🔑 Roles y Funcionalidades
 
-### Autenticación
-```
-POST /auth/login          ← Login con usuario/contraseña
-POST /auth/logout         ← Logout
-POST /auth/refresh        ← Refresh token
-```
+| Rol | Funcionalidades |
+|-----|-----------------|
+| **ADMIN** | • CRUD usuarios con Firebase<br>• Gestión edificios y unidades<br>• Dashboard completo<br>• Cambiar contraseñas<br>• Asignar departamentos |
+| **CONCIERGE** | • Gestión de paquetes<br>• Registro de visitantes<br>• Bitácora de eventos<br>• Control de acceso |
+| **RESIDENT** | • Ver mis paquetes<br>• Crear invitaciones<br>• Reservar áreas comunes<br>• Recibir notificaciones |
+| **FINANCE** | • Ver facturas<br>• Generar cobros<br>• Reportes financieros |
 
-### Admin
-```
-GET    /admin/users       ← Listar usuarios
-POST   /admin/users       ← Crear usuario
-PUT    /admin/users/:id   ← Actualizar usuario
-DELETE /admin/users/:id   ← Eliminar usuario
+## 🛠️ Scripts Disponibles
 
-GET    /admin/buildings   ← Listar edificios
-POST   /admin/buildings   ← Crear edificio
-PUT    /admin/buildings/:id
-DELETE /admin/buildings/:id
-```
-
-### Conserje
-```
-GET    /concierge/logbook ← Listar bitácora
-POST   /concierge/logbook ← Crear entrada
-PUT    /concierge/logbook/:id
-DELETE /concierge/logbook/:id
-
-GET    /concierge/packages
-PUT    /concierge/packages/:id ← Actualizar estado
-
-GET    /concierge/visitors
-POST   /concierge/visitors
-```
-
-### Residente
-```
-GET    /resident/packages ← Mis paquetes
-POST   /resident/invitations
-POST   /resident/amenities/reserve
-```
-
-## ⚙️ Configuración
-
-### Variables de Entorno
-Crea `.env.local`:
-```
-VITE_API_URL=http://localhost:8080/api
-VITE_API_TIMEOUT=5000
-```
-
-### Vite Config
-Ver `vite.config.js` para opciones de build y desarrollo.
-
-## 🧪 Testing
-
-### Tests Manuales
-Ver [TESTING_CHECKLIST.md](./TESTING_CHECKLIST.md) para 28 pruebas detalladas.
-
-### Tests Unitarios (Futuro)
 ```bash
-npm run test              ← Ejecutar tests con Vitest
-npm run test:coverage    ← Coverage report
+npm run dev          # Desarrollo con hot reload (http://localhost:5173)
+npm run build        # Build de producción (carpeta dist/)
+npm run preview      # Probar build localmente
+npm run lint         # ESLint para código
 ```
 
-### Tests E2E (Futuro)
-```bash
-npm run test:e2e         ← Cypress tests
+## 📚 Dependencias Principales
+
+```json
+{
+  "react": "^18.2.0",
+  "react-dom": "^18.2.0",
+  "react-router-dom": "^6.x",
+  "react-bootstrap": "^2.10.0",
+  "bootstrap": "^5.3.2",
+  "axios": "^1.6.0",
+  "firebase": "^11.1.0",
+  "vite": "^7.3.0"
+}
 ```
-
-## 📊 Performance
-
-| Métrica | Valor |
-|---------|-------|
-| Build Size (gzipped) | ~370KB |
-| Mock API Response | ~30ms |
-| First Contentful Paint | <1s |
-| Time to Interactive | <2s |
-| Lighthouse Score | 90+ |
-
-## 🛠️ Stack Tecnológico
-
-| Tecnología | Versión | Uso |
-|-----------|---------|-----|
-| React | 18 | UI Framework |
-| Vite | 7.3.0 | Bundler |
-| React Router | 6 | Enrutamiento |
-| Axios | Latest | HTTP Client |
-| Bootstrap | 5 | CSS Framework |
-| React Bootstrap | Latest | Componentes UI |
-| jwt-decode | Latest | JWT parsing |
-| ESLint | Latest | Code linting |
-
-## 🔐 Seguridad
-
-- ✅ JWT token en localStorage
-- ✅ Rutas protegidas por rol
-- ✅ CORS configurado
-- ✅ Headers de seguridad
-- ✅ Token refresh automático (implementar en backend)
-- ✅ Logout limpia sesión
-
-## 🐛 Debugging
-
-### Console Logs
-La app muestra logs con emojis para performance:
-- ⚡ < 100ms (muy rápido)
-- ⏱️ 100-500ms (normal)
-- 🐢 > 500ms (lento)
-
-### DevTools
-1. F12 → Console para ver logs
-2. F12 → Network para ver requests
-3. F12 → Storage para ver localStorage
-4. F12 → React DevTools para ver componentes
-
-## 📞 Soporte
-
-### Problemas Comunes
-
-**Login no funciona**
-→ Ver [TESTING_CHECKLIST.md#t11-login-con-credenciales-válidas-admin](./TESTING_CHECKLIST.md#t11-login-con-credenciales-válidas-admin)
-
-**API no responde**
-→ Ver [DEBUGGING_PERFORMANCE.md](./DEBUGGING_PERFORMANCE.md)
-
-**Rutas no protegidas**
-→ Revisar ProtectedRoute.jsx y AppRouter.jsx
-
-**Errores de compilación**
-→ `npm install` y revisar console
 
 ## 📝 Changelog
 
-### v1.0.0 (Actual)
-- ✅ Autenticación con JWT
-- ✅ Roles basados en acceso
-- ✅ Admin panel completo
-- ✅ Concierge panel funcional
-- ✅ Resident portal básico
-- ✅ Mock API con 15+ endpoints
-- ✅ 28 pruebas documentadas
+### v1.1.0 (2026-01-20) ✨ NUEVO
+- ✅ **Gestión Completa de Usuarios con Firebase**
+  - Componente `AddUserModal.jsx` mejorado con campo unitId
+  - Componente `EditUserModal.jsx` nuevo con edición completa
+  - Componente `ChangePasswordModal.jsx` nuevo con indicador de fortaleza
+  - Página `Users.jsx` refactorizada con dropdown de acciones
+  - Integración bidireccional Firebase ↔ PostgreSQL
+  - adminService.js actualizado con endpoints CRUD completos
+  
+- 🐛 **Correcciones**
+  - Fixed modal positioning (fuera del loop map)
+  - Fixed missing Button import en AdminDashboard.jsx
+  - Mejorada validación de formularios en todos los modals
 
-### v1.1.0 (Próxima)
-- 🔄 Backend real integration
-- 🔄 Refresh token
-- 🔄 CRUD completo
-- 🔄 Tests unitarios
-- 🔄 Tests E2E
+### v1.0.0 (2026-01-15)
+- ✅ Sistema base con Firebase Authentication
+- ✅ Panel Admin con gestión básica
+- ✅ Panel Conserje con paquetería
+- ✅ Portal Residente con invitaciones
+- ✅ Rutas protegidas por rol
+- ✅ Dashboard con métricas
+
+## 🔧 Desarrollo
+
+### Agregar Nueva Funcionalidad
+
+1. **Crear servicio en /api/**
+```javascript
+// api/miServicio.js
+import axiosInstance from './axiosConfig';
+
+export const miServicio = {
+  listar: () => axiosInstance.get('/api/mi-endpoint'),
+  crear: (data) => axiosInstance.post('/api/mi-endpoint', data)
+};
+```
+
+2. **Crear componente en /pages/** o **/components/**
+```jsx
+import { useState, useEffect } from 'react';
+import { miServicio } from '../api/miServicio';
+
+function MiComponente() {
+  const [datos, setDatos] = useState([]);
+  
+  useEffect(() => {
+    miServicio.listar()
+      .then(res => setDatos(res.data))
+      .catch(err => console.error(err));
+  }, []);
+  
+  return <div>{/* UI aquí */}</div>;
+}
+```
+
+3. **Agregar ruta en /routes/AppRoutes.jsx**
+```jsx
+<Route path="/mi-ruta" element={
+  <ProtectedRoute allowedRoles={['ADMIN']}>
+    <MiComponente />
+  </ProtectedRoute>
+} />
+```
+
+## 🚨 Troubleshooting
+
+### Error: Firebase Auth No Inicializado
+```bash
+# Verificar que firebase.js esté configurado
+# Revisar firebaseConfig en src/config/firebase.js
+```
+
+### Error: CORS Backend
+```javascript
+// El backend debe tener habilitado CORS:
+// @CrossOrigin(origins = "http://localhost:5173")
+```
+
+### Error: Token Expirado
+```javascript
+// El AuthProvider maneja refresh automático
+// Si persiste, hacer logout y login nuevamente
+```
+
+### Usuarios No Aparecen
+```sql
+-- Verificar en PostgreSQL:
+SELECT id, email, first_name, role, firebase_uid FROM users;
+
+-- Verificar en Firebase Authentication:
+-- Firebase Console → Authentication → Users
+```
+
+## 🔗 Enlaces Útiles
+
+- **Backend API**: http://168.197.50.14:8080
+- **Swagger Docs**: http://168.197.50.14:8080/swagger-ui.html
+- **Firebase Console**: https://console.firebase.google.com
+- **GitHub Backend**: https://github.com/lquijadaduoc/lobbysync-api
+- **GitHub Frontend**: https://github.com/lquijadaduoc/lobbysync-web
 
 ## 📄 Licencia
 
-MIT - Ver LICENSE.md para más detalles
+Este proyecto es privado y está bajo desarrollo para uso interno.
 
-## 👥 Contribuir
+## 👥 Equipo
 
-1. Fork el repo
-2. Crea rama feature (`git checkout -b feature/amazing-feature`)
-3. Commit cambios (`git commit -m 'Add amazing feature'`)
-4. Push a rama (`git push origin feature/amazing-feature`)
-5. Abre Pull Request
-
-## 🙏 Agradecimientos
-
-- React community
-- Vite team
-- Bootstrap framework
-- Todos los que contribuyen
-
----
-
-**Última actualización:** 2024  
-**Estado:** ✅ Listo para producción (con backend real)  
-**Soporte:** Contacta al equipo de desarrollo
+- **Frontend Lead**: Sebastian
+- **Firebase Integration**: Sebastian
+- **UI/UX**: Sebastian
